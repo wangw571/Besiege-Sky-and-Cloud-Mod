@@ -46,10 +46,21 @@ namespace SkyAndCloud
         private GameObject cloudTemp;
         private int cloudAmount = 60;
         private int cloudAmountTemp = 0;
+        private float cloudSizeScale = 1;
+        private float lowerCloudsMinHeight = 130f;
+        private float lowerCloudsMaxHeight = 200f;
+        private float higherCloudsMinHeight = 300;
+        private Color higherCloudsColor = new Color(1f, 1f, 1f, 1f);
+        private Color lowerCloudsColor = new Color (0.76f, 0.76f,0.8f,1);
+        private float higherCloudsMaxHeight = 400-40;
+        private bool resetCloudsNow = true;
         void Start()
         {
             //Application.LoadLevel (5);
             StartCoroutine(groundTexture());
+
+
+
             Commands.RegisterHelpMessage("SimpleIOBlocks commands:\n	IOSpheres [bool]\n	IOPulse [bool]\n	IOTickGUI [bool]");
             Commands.RegisterCommand("ResetCloudsAmount", (args, notUses) => {
                 if (args.Length < 1)
@@ -66,23 +77,161 @@ namespace SkyAndCloud
                 {
                     return "Could not parse " + args[0] + "to cloud amount";
                 }
+                return "There will be " + cloudAmount.ToString() + " clouds";
                 
-                    return "There will be " + cloudAmount.ToString() + " clouds";
                 
-            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");
+            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//Amount
             
+            Commands.RegisterCommand("ResetCloudsSizeScale", (args, notUses) => {
+                if (args.Length < 1)
+                {
+                    return "ERROR!";
+                }
+                try
+                {
+                    float cccloudcloudSizeScale = float.Parse(args[0]);
+                    if (cccloudcloudSizeScale <= 0) { return "Your cloud size scale is not available. "; }
+                    else { cloudSizeScale = cccloudcloudSizeScale; }
+                }
+                catch
+                {
+                    return "Could not parse " + args[0] + "to cloud size scale";
+                }
+
+                    return "The cloud size scale will be " + cloudSizeScale.ToString();
+
+            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//SizeScale
+
+            Commands.RegisterCommand("ResetLowerCloudsMinHeight", (args, notUses) => {
+                if (args.Length < 1)
+                {
+                    return "ERROR!";
+                }
+                try
+                {
+                    float llllowerCloudsMinHeight = float.Parse(args[0]);
+                    if (llllowerCloudsMinHeight >= lowerCloudsMaxHeight) { return "Your lower cloud minimum height is not available. "; }
+                    else { lowerCloudsMinHeight = llllowerCloudsMinHeight; }
+                }
+                catch
+                {
+                    return "Could not parse " + args[0] + "to lower cloud minimum height";
+                }
+
+                return "The lower cloud minimum height will be " + cloudSizeScale.ToString();
+
+            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//ResetLowerCloudsMinHeight
+
+            Commands.RegisterCommand("ResetLowerCloudsMaxHeight", (args, notUses) => {
+                if (args.Length < 1)
+                {
+                    return "ERROR!";
+                }
+                try
+                {
+                    float llllowerCloudsMaxHeight = float.Parse(args[0]);
+                    if (llllowerCloudsMaxHeight <= lowerCloudsMinHeight) { return "Your lower cloud maximum height is not available. "; }
+                    else { lowerCloudsMaxHeight = llllowerCloudsMaxHeight; }
+                }
+                catch
+                {
+                    return "Could not parse " + args[0] + "to lower cloud maximum height";
+                }
+
+                return "The lower cloud maximum height will be " + cloudSizeScale.ToString();
+
+            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//ResetLowerCloudsMaxHeight
+
+            Commands.RegisterCommand("ResetHigherCloudsMinHeight", (args, notUses) => {
+                if (args.Length < 1)
+                {
+                    return "ERROR!";
+                }
+                try
+                {
+                    float hhhhigherCloudsMinHeight = float.Parse(args[0]);
+                    if (hhhhigherCloudsMinHeight >= higherCloudsMaxHeight) { return "Your higher cloud minimum height is not available. "; }
+                    else { higherCloudsMinHeight = hhhhigherCloudsMinHeight; }
+                }
+                catch
+                {
+                    return "Could not parse " + args[0] + "to higher cloud minimum height";
+                }
+
+                return "The higher cloud minimum height will be " + cloudSizeScale.ToString();
+
+            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//ResetHigherCloudsMinHeight
+
+            Commands.RegisterCommand("ResetHigherCloudsMaxHeight", (args, notUses) => {
+                if (args.Length < 1)
+                {
+                    return "ERROR!";
+                }
+                try
+                {
+                    float hhhigherCloudsMaxHeight = float.Parse(args[0]);
+                    if (hhhigherCloudsMaxHeight <= higherCloudsMinHeight) { return "Your higher cloud maximum height is not available. "; }
+                    else { higherCloudsMaxHeight = hhhigherCloudsMaxHeight; }
+                }
+                catch
+                {
+                    return "Could not parse " + args[0] + "to higher cloud maximum height";
+                }
+
+                return "The higher cloud maximum height will be " + cloudSizeScale.ToString();
+
+            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//ResetHigherCloudsMaxHeight
+
+            Commands.RegisterCommand("ResetHigherCloudsColorRGBA", (args, notUses) => {
+                if (args.Length < 3)
+                {
+                    return "ERROR!You don't have all four color elements! (Red, Green, Blue, Alpha) \n Please do it like this\n  ResetHigherCloudsColorRGBA 155 0 255 99";
+                }
+                try
+                {
+                    higherCloudsColor = new Color(float.Parse(args[0])/255f, float.Parse(args[1])/255f, float.Parse(args[2])/255f, float.Parse(args[3])/100f);
+                }
+                catch
+                {
+                    return "ERROR! Please do it like this\n  ResetHigherCloudsColorRGBA 155 0 255 99";
+                }
+
+                return "The higher cloud color will be " + higherCloudsColor.ToString();
+
+            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//ResetHigherCloudsColor
+
+            Commands.RegisterCommand("ResetLowerCloudsColorRGBA", (args, notUses) => {
+                if (args.Length < 3)
+                {
+                    return "ERROR!You don't have all four color elements! (Red, Green, Blue, Alpha) \n Please do it like this\n  ResetLowerCloudsColorRGBA 155 0 255 99";
+                }
+                try
+                {
+                    lowerCloudsColor = new Color(float.Parse(args[0]) / 255f, float.Parse(args[1]) / 255f, float.Parse(args[2]) / 255f, float.Parse(args[3]) / 100f);
+                }
+                catch
+                {
+                    return "ERROR! Please do it like this\n  ResetLowCloudsColorRGBA 155 0 255 99";
+                }
+
+                return "The lower cloud color will be " + lowerCloudsColor.ToString();
+
+            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//ResetLowerCloudsColor
+
+            Commands.RegisterCommand("ResetAllClouds", (args, notUses) => {
+
+                resetCloudsNow = true;
+                return "The clouds will be reset";
+
+            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//Reset All Clouds
+
         }
 
         //public int CurrentLevel = 2;
         IEnumerator groundTexture()
         {
             yield return new WaitForSeconds(0.01f);
-            try { if (Input.GetKey(KeyCode.F5)) { GameObject.Find("FloorBig").renderer.material.mainTexture = null; GameObject.Find("FloorBig").renderer.material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture; } } catch (Exception c) { int i = 0; }
-            try { if (Input.GetKey(KeyCode.F5)) { GameObject.Find("FloorBig").renderer.material.mainTexture = null; GameObject.Find("FloorBig").renderer.material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture; } } catch (Exception c) { int i = 0; }
-            try { if (Input.GetKey(KeyCode.F5)) { GameObject.Find("FloorBig").renderer.material.mainTexture = null; GameObject.Find("FloorBig").renderer.material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.bmp").texture; } } catch (Exception c) { int i = 0; }
-            try { if (Input.GetKey(KeyCode.F5)) { GameObject.Find("FloorBig").renderer.material.mainTexture = null; GameObject.Find("FloorBig").renderer.material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpeg").texture; } } catch (Exception c) { int i = 0; }
-            try { if (Input.GetKey(KeyCode.F5)) { GameObject.Find("FloorBig").renderer.material.mainTexture = null; GameObject.Find("FloorBig").renderer.material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture; } } catch (Exception c) { int i = 0; }
-
+            try { if (Input.GetKey(KeyCode.F5)) { GameObject.Find("FloorBig").renderer.material.mainTexture = null; GameObject.Find("FloorBig").renderer.material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture; } } catch  { int i = 0; }
             StartCoroutine(groundTexture());
         }
         
@@ -95,20 +244,19 @@ namespace SkyAndCloud
             {
                 if (clouds[1] == null)
                 {
-
                     clouds = new GameObject[cloudAmount];
                     for (int i = 0; i <= clouds.Length; i++)
                     {
                         GameObject.DontDestroyOnLoad(clouds[i]);
-                        if (i < (int)clouds.Length/3)
+                        if (i < (int)clouds.Length / 3)
                         {
-                            clouds[i] = (GameObject)UnityEngine.Object.Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(300, 400 - 40f), UnityEngine.Random.Range(-700, 700)), new Quaternion(0, 0, 0, 0));
-                            clouds[i].particleSystem.startColor = new Color(1f, 1f, 1f, 1f);
+                            clouds[i] = (GameObject)UnityEngine.Object.Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(higherCloudsMinHeight, higherCloudsMaxHeight), UnityEngine.Random.Range(-700, 700)), new Quaternion(0, 0, 0, 0));
+                            clouds[i].particleSystem.startColor = higherCloudsColor;
                         }
                         else
                         {
-                            clouds[i] = (GameObject)UnityEngine.Object.Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(100f, 200), UnityEngine.Random.Range(-700, 700)), new Quaternion(0, 0, 0, 0));
-                            clouds[i].particleSystem.startColor = new Color(0.76f + ((clouds[i].transform.position.y - 100) / 100) * 0.1f, 0.76f + ((clouds[i].transform.position.y - 100) / 100) * 0.1f, 0.8f, 1f);
+                            clouds[i] = (GameObject)UnityEngine.Object.Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(lowerCloudsMinHeight, lowerCloudsMaxHeight), UnityEngine.Random.Range(-700, 700)), new Quaternion(0, 0, 0, 0));
+                            clouds[i].particleSystem.startColor = new Color(lowerCloudsColor.r + ((clouds[i].transform.position.y - lowerCloudsMinHeight) / lowerCloudsMaxHeight - lowerCloudsMinHeight) * 0.1f, lowerCloudsColor.g + ((clouds[i].transform.position.y - lowerCloudsMinHeight) / lowerCloudsMaxHeight - lowerCloudsMinHeight) * 0.1f, lowerCloudsColor.b, lowerCloudsColor.a);
                         }
                         clouds[i].SetActive(true);
                         clouds[i].particleSystem.startSize = 30;
@@ -116,7 +264,7 @@ namespace SkyAndCloud
                         clouds[i].particleSystem.startLifetime = 5;
                         clouds[i].transform.localScale = new Vector3(15, 15, 15);
                         clouds[i].particleSystem.maxParticles = (int)clouds[i].transform.position.y;
-                        
+
 
                     }
                 }
@@ -129,13 +277,23 @@ namespace SkyAndCloud
                         if (Application.loadedLevel == 2) { cloud.transform.position = new Vector3(-9999, -9999, -9999); }
                         cloud.transform.position += new Vector3(randomMove, randomMove - 0.015f, randomMove);
                         cloud.transform.localScale *= 1 + randomMove - 0.015f;
+                        cloud.particleSystem.startLifetime = 0.01f;
+                        cloud.particleSystem.startSize = cloudSizeScale * 30;
+                        cloud.transform.localScale = new Vector3(15 * cloudSizeScale, 15 * cloudSizeScale, 15 * cloudSizeScale);
+                        cloud.particleSystem.startLifetime = 5;
                         if (cloud.transform.position.x > 700) { cloud.transform.position = new Vector3(-700, cloud.transform.position.y, cloud.transform.position.z); }
                         if (cloud.transform.position.z > 700) { cloud.transform.position = new Vector3(cloud.transform.position.x, cloud.transform.position.y, -700); }
 
                     }
                 }
+                if (resetCloudsNow)
+                {
+                    resetCloudsNow = false;
+                    for (int i = 0; i <= clouds.Length; i++) { GameObject.Destroy(clouds[i]); }
+                    clouds = new GameObject[cloudAmount];
+                }
             }
-            catch { }
+            catch { } 
         }
         
 
