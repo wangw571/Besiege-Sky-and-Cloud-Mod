@@ -15,9 +15,9 @@ namespace SkyAndCloud
     {
         public override string Name { get { return "Sky_and_Ground_Mod"; } }
         public override string DisplayName { get { return "Sky and Ground Mod"; } }
-        public override string BesiegeVersion { get { return "v0.11"; } }
+        public override string BesiegeVersion { get { return "v0.2"; } }
         public override string Author { get { return "覅是"; } }
-        public override Version Version { get { return new Version(100, 100); } }
+        public override Version Version { get { return new Version("0.73"); } }
         public override bool CanBeUnloaded { get { return true; } }
 
         public GameObject temp;
@@ -51,9 +51,9 @@ namespace SkyAndCloud
         private float lowerCloudsMaxHeight = 200f;
         private float higherCloudsMinHeight = 300;
         private Color higherCloudsColor = new Color(1f, 1f, 1f, 1f);
-        private Color lowerCloudsColor = new Color (0.76f, 0.76f,0.8f,1);
+        private Color lowerCloudsColor = new Color (0.92f, 0.9f,0.8f,1);
         private float higherCloudsMaxHeight = 400-40;
-        private bool resetCloudsNow = true;
+        private bool resetCloudsNow = false;
         void Start()
         {
             //Application.LoadLevel (5);
@@ -62,7 +62,7 @@ namespace SkyAndCloud
 
 
             Commands.RegisterHelpMessage("SimpleIOBlocks commands:\n	IOSpheres [bool]\n	IOPulse [bool]\n	IOTickGUI [bool]");
-            Commands.RegisterCommand("ResetCloudsAmount", (args, notUses) => {
+             Commands.RegisterCommand("ResetCloudsAmount", (args, notUses) => {
                 if (args.Length < 1)
                 {
                     return "ERROR!";
@@ -98,7 +98,7 @@ namespace SkyAndCloud
                     return "Could not parse " + args[0] + "to cloud size scale";
                 }
 
-                    return "The cloud size scale will be " + cloudSizeScale.ToString();
+                    return "The clouds' size scale will be " + cloudSizeScale.ToString();
 
             }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//SizeScale
 
@@ -118,7 +118,7 @@ namespace SkyAndCloud
                     return "Could not parse " + args[0] + "to lower cloud minimum height";
                 }
 
-                return "The lower cloud minimum height will be " + cloudSizeScale.ToString();
+                return "The lower clouds' minimum height will be " + lowerCloudsMinHeight.ToString();
 
             }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//ResetLowerCloudsMinHeight
 
@@ -138,7 +138,7 @@ namespace SkyAndCloud
                     return "Could not parse " + args[0] + "to lower cloud maximum height";
                 }
 
-                return "The lower cloud maximum height will be " + cloudSizeScale.ToString();
+                return "The lower clouds' maximum height will be " + lowerCloudsMaxHeight.ToString();
 
             }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//ResetLowerCloudsMaxHeight
 
@@ -158,11 +158,11 @@ namespace SkyAndCloud
                     return "Could not parse " + args[0] + "to higher cloud minimum height";
                 }
 
-                return "The higher cloud minimum height will be " + cloudSizeScale.ToString();
+                return "The higher clouds' minimum height will be " + higherCloudsMinHeight.ToString();
 
             }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//ResetHigherCloudsMinHeight
 
-            Commands.RegisterCommand("ResetHigherCloudsMaxHeight", (args, notUses) => {
+             Commands.RegisterCommand("ResetHigherCloudsMaxHeight", (args, notUses) => {
                 if (args.Length < 1)
                 {
                     return "ERROR!";
@@ -178,7 +178,7 @@ namespace SkyAndCloud
                     return "Could not parse " + args[0] + "to higher cloud maximum height";
                 }
 
-                return "The higher cloud maximum height will be " + cloudSizeScale.ToString();
+                return "The higher clouds' maximum height will be " + higherCloudsMaxHeight.ToString();
 
             }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//ResetHigherCloudsMaxHeight
 
@@ -218,20 +218,70 @@ namespace SkyAndCloud
 
             }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//ResetLowerCloudsColor
 
-            Commands.RegisterCommand("ResetAllClouds", (args, notUses) => {
+             Commands.RegisterCommand("Re-ProduceAllClouds", (args, notUses) => {
 
                 resetCloudsNow = true;
-                return "The clouds will be reset";
+                return "The clouds will be re-produce";
 
-            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//Reset All Clouds
+            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//Reproduce All Clouds
 
+            Commands.RegisterCommand("ResetFloorSizeScale", (args, notUses) => {
+                if (args.Length < 1)
+                {
+                    return "ERROR!";
+                }
+                try
+                {
+                    GameObject.Find("FloorBig").transform.localScale = new Vector3(float.Parse(args[0]), GameObject.Find("FloorBig").transform.localScale.y,float.Parse(args[1]));
+                }
+                catch
+                {
+                    return "Could not parse " + args[0] + "and" + args[1] + "to floor size scale";
+                }
+
+                return "The floor's size scale will be " + GameObject.Find("FloorBig").transform.localScale.ToString();
+
+            }, "Changes wether or not you can see the red and blue spheres the next time you start the simulation");//FloorSizeScale
         }
 
         //public int CurrentLevel = 2;
         IEnumerator groundTexture()
         {
             yield return new WaitForSeconds(0.01f);
-            try { if (Input.GetKey(KeyCode.F5)) { GameObject.Find("FloorBig").renderer.material.mainTexture = null; GameObject.Find("FloorBig").renderer.material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture; } } catch  { int i = 0; }
+            try {
+                
+                if (Input.GetKey(KeyCode.F5)) {
+                    WWW png = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png");
+                    WWW jpg = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg");
+                    GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = null;
+                    if (png.size > 5)
+                    {
+                        try
+                        {
+                            GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture;
+                        }
+                        catch { }
+                        try
+                        {
+                            GameObject.Find("terrainObject").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture;
+                        }
+                        catch { }
+                        }
+                    else if (jpg.size > 5)
+                    {
+                        try
+                        {
+                            GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture;
+                        }
+                        catch { }
+                        try
+                        {
+                            GameObject.Find("terrainObject").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture;
+                        }
+                        catch { }
+                    }
+                    else { Debug.Log("There is no such a texture file named \"GroundTexture.png\" or \"GroundTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); }
+                } } catch  {}
             StartCoroutine(groundTexture());
         }
         
@@ -251,19 +301,19 @@ namespace SkyAndCloud
                         if (i < (int)clouds.Length / 3)
                         {
                             clouds[i] = (GameObject)UnityEngine.Object.Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(higherCloudsMinHeight, higherCloudsMaxHeight), UnityEngine.Random.Range(-700, 700)), new Quaternion(0, 0, 0, 0));
-                            clouds[i].particleSystem.startColor = higherCloudsColor;
+                            clouds[i].GetComponent<ParticleSystem>().startColor = higherCloudsColor;
                         }
                         else
                         {
                             clouds[i] = (GameObject)UnityEngine.Object.Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(lowerCloudsMinHeight, lowerCloudsMaxHeight), UnityEngine.Random.Range(-700, 700)), new Quaternion(0, 0, 0, 0));
-                            clouds[i].particleSystem.startColor = new Color(lowerCloudsColor.r + ((clouds[i].transform.position.y - lowerCloudsMinHeight) / lowerCloudsMaxHeight - lowerCloudsMinHeight) * 0.1f, lowerCloudsColor.g + ((clouds[i].transform.position.y - lowerCloudsMinHeight) / lowerCloudsMaxHeight - lowerCloudsMinHeight) * 0.1f, lowerCloudsColor.b, lowerCloudsColor.a);
+                            clouds[i].GetComponent<ParticleSystem>().startColor = new Color(lowerCloudsColor.r, lowerCloudsColor.g/* + ((clouds[i].transform.position.y - lowerCloudsMinHeight) / lowerCloudsMaxHeight - lowerCloudsMinHeight) * 0.1f*/, lowerCloudsColor.b, lowerCloudsColor.a);
                         }
                         clouds[i].SetActive(true);
-                        clouds[i].particleSystem.startSize = 30;
+                        clouds[i].GetComponent<ParticleSystem>().startSize = 30;
                         clouds[i].transform.LookAt(new Vector3(UnityEngine.Random.Range(-500f, 700f), UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(-700, 700)));
-                        clouds[i].particleSystem.startLifetime = 5;
+                        clouds[i].GetComponent<ParticleSystem>().startLifetime = 5;
                         clouds[i].transform.localScale = new Vector3(15, 15, 15);
-                        clouds[i].particleSystem.maxParticles = (int)clouds[i].transform.position.y;
+                        clouds[i].GetComponent<ParticleSystem>().maxParticles = (int)clouds[i].transform.position.y;
 
 
                     }
@@ -277,10 +327,10 @@ namespace SkyAndCloud
                         if (Application.loadedLevel == 2) { cloud.transform.position = new Vector3(-9999, -9999, -9999); }
                         cloud.transform.position += new Vector3(randomMove, randomMove - 0.015f, randomMove);
                         cloud.transform.localScale *= 1 + randomMove - 0.015f;
-                        cloud.particleSystem.startLifetime = 0.01f;
-                        cloud.particleSystem.startSize = cloudSizeScale * 30;
+                        cloud.GetComponent<ParticleSystem>().startLifetime = 0.01f;
+                        cloud.GetComponent<ParticleSystem>().startSize = cloudSizeScale * 30;
                         cloud.transform.localScale = new Vector3(15 * cloudSizeScale, 15 * cloudSizeScale, 15 * cloudSizeScale);
-                        cloud.particleSystem.startLifetime = 5;
+                        cloud.GetComponent<ParticleSystem>().startLifetime = 5;
                         if (cloud.transform.position.x > 700) { cloud.transform.position = new Vector3(-700, cloud.transform.position.y, cloud.transform.position.z); }
                         if (cloud.transform.position.z > 700) { cloud.transform.position = new Vector3(cloud.transform.position.x, cloud.transform.position.y, -700); }
 
@@ -289,8 +339,8 @@ namespace SkyAndCloud
                 if (resetCloudsNow)
                 {
                     resetCloudsNow = false;
-                    for (int i = 0; i <= clouds.Length; i++) { GameObject.Destroy(clouds[i]); }
-                    clouds = new GameObject[cloudAmount];
+                    foreach (GameObject cloud in Resources.FindObjectsOfTypeAll(typeof(GameObject))) { if (cloud != cloudTemp && cloud.name.Equals("CLoud(Clone)(Clone)")) { Destroy(cloud); } }
+                        clouds = new GameObject[cloudAmount];
                 }
             }
             catch { } 
