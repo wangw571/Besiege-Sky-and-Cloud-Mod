@@ -47,6 +47,9 @@ namespace SkyAndCloud
         /*private GameObject floatingRock = new GameObject();
         private int floatingrocksCloneCount = 0;*/
         private GameObject cloudTemp;
+        private GameObject godLightTemp;
+        private GameObject rainTemp;
+        private GameObject thunderCloudTemp;
         private int cloudAmount = 60;
         private int cloudAmountTemp = 0;
         private float cloudSizeScale = 1;
@@ -86,7 +89,7 @@ namespace SkyAndCloud
                 try
                 {
                     int cccloudcloudAmount = int.Parse(args[0]);
-                    if (cccloudcloudAmount <= 1 ^ cccloudcloudAmount > 3000) { return "Your cloud amount is not available. "; }
+                    if (cccloudcloudAmount < 0 ^ cccloudcloudAmount > 3000) { return "Your cloud amount is not available. "; }
                     else { cloudAmount = cccloudcloudAmount; }
                 }
                 catch
@@ -96,7 +99,7 @@ namespace SkyAndCloud
                 return "There will be " + cloudAmount.ToString() + " clouds";
 
 
-            }, "Reset the amount of clouds. No bigger than 3000");//Amount
+            }, "Reset the amount of clouds. No bigger than 3000 and no less than 2.");//Amount
 
             Commands.RegisterCommand("ResetCloudsSizeScale", (args, notUses) =>
             {
@@ -607,11 +610,11 @@ namespace SkyAndCloud
                 }
             if (cloudTemp == null) { cloudTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("CLoud")); cloudTemp.SetActive(false); }
             DontDestroyOnLoad(cloudTemp);
-            if (cloudAmountTemp != cloudAmount) { resetCloudsNow = true; clouds[1] = null; cloudAmountTemp = cloudAmount; try { for (int k = cloudAmount; k < clouds.Length; k++) { Destroy(clouds[k].gameObject); } } catch { } }
+            if (cloudAmountTemp != cloudAmount) { resetCloudsNow = true; clouds[1] = null; cloudAmountTemp = cloudAmount; try { for (int k = cloudAmount; k < clouds.Length; k++) { Destroy(clouds[k].gameObject); Destroy(shadow[k].gameObject); } } catch { } }
             try
             {
                 floorScale = GameObject.Find("FloorBig").transform.localScale;
-                if (clouds[1] == null)
+                if (clouds[1] == null && cloudAmount > 1)
                 {
                     clouds = new GameObject[cloudAmount];
                     shadow = new GameObject[cloudAmount];
@@ -623,13 +626,13 @@ namespace SkyAndCloud
                         {
                             clouds[i] = (GameObject)UnityEngine.Object.Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(higherCloudsMinHeight, higherCloudsMaxHeight), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)), new Quaternion(0, 0, 0, 0));
                             clouds[i].GetComponent<ParticleSystem>().startColor = higherCloudsColor;
-                            clouds[i].layer = 6;
+                            clouds[i].layer = 12;
                         }
                         else
                         {
                             clouds[i] = (GameObject)UnityEngine.Object.Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(lowerCloudsMinHeight, lowerCloudsMaxHeight), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)), new Quaternion(0, 0, 0, 0));
                             clouds[i].GetComponent<ParticleSystem>().startColor = lowerCloudsColor;
-                            clouds[i].layer = 5;
+                            clouds[i].layer = 12;
                         }
                         clouds[i].SetActive(true);
                         clouds[i].GetComponent<ParticleSystem>().startSize = 30;
@@ -677,6 +680,7 @@ namespace SkyAndCloud
                         cloud.GetComponent<ParticleSystem>().startSize = cloudSizeScale * 30;
                         cloud.transform.localScale = new Vector3(15 * cloudSizeScale, 15 * cloudSizeScale, 15 * cloudSizeScale);
                         cloud.GetComponent<ParticleSystem>().startLifetime = 5;
+
                         if (cloud.transform.position.x > floorScale.x / 2 + 200) { cloud.transform.position = new Vector3(-floorScale.x / 2 - 195, cloud.transform.position.y, cloud.transform.position.z); }
                         if (cloud.transform.position.z > floorScale.z / 2 + 200) { cloud.transform.position = new Vector3(cloud.transform.position.x, cloud.transform.position.y, -floorScale.z / 2 - 195); }
                         if (cloud.transform.position.x < -floorScale.x / 2 - 200) { cloud.transform.position = new Vector3(floorScale.x / 2 + 195, cloud.transform.position.y, cloud.transform.position.z); }
@@ -690,8 +694,13 @@ namespace SkyAndCloud
                     foreach (GameObject cloud in Resources.FindObjectsOfTypeAll(typeof(GameObject))) { if (cloud != cloudTemp && cloud.name.Equals("CLoud(Clone)(Clone)")) { Destroy(cloud); } }
                     clouds = new GameObject[cloudAmount];
                 }
+                foreach (GameObject oneShadow in shadow) { if (isShadowoff) { oneShadow.transform.localScale = new Vector3(0, 0, 0); } else { oneShadow.transform.localScale = new Vector3(4, 2.5f, 2.5f); } }
             }
             catch { }
+
+            try { if (godLightTemp != null) { godLightTemp = GameObject.Find("GodRays"); godLightTemp.SetActive(false); } } catch { }
+            try { if (rainTemp != null) { rainTemp = GameObject.Find("Rain Particles"); rainTemp.SetActive(false); } } catch { }
+            try { if (thunderCloudTemp != null) { thunderCloudTemp = GameObject.Find("THUNDER CLOUD"); thunderCloudTemp.SetActive(false); } } catch { }
         }
      /*   void OnParticleCollision(GameObject other)
         {
