@@ -252,7 +252,7 @@ namespace SkyAndCloud
                 }
                 try
                 {
-                    GameObject.Find("MainCamera").GetComponent<Camera>().backgroundColor = new Color(float.Parse(args[0]) / 255f, float.Parse(args[1]) / 255f, float.Parse(args[2]) / 255f, float.Parse(args[3]) / 100f);
+                    GameObject.Find("Main Camera").GetComponent<Camera>().backgroundColor = new Color(float.Parse(args[0]) / 255f, float.Parse(args[1]) / 255f, float.Parse(args[2]) / 255f, float.Parse(args[3]) / 100f);
                 }
                 catch
                 {
@@ -589,7 +589,7 @@ namespace SkyAndCloud
                     sun.transform.position = GameObject.Find("Directional light").transform.forward * -600 + GameObject.Find("3D Hud Cam").transform.position;
                 }
                 catch { }*/
-                
+
                 /* WWW flare = new WWW("File:///" + Application.dataPath + "/Mods/50mm Zoom.flare");
                  UnityEngine.Flare flareO = flare.assetBundle.LoadAsset("50mm Zoom");
                  Flare anoFlare = UnityEngine.Object.Instantiate(flareO, GameObject.Find("Directional light").transform.position, GameObject.Find("Directional light").transform.rotation);
@@ -608,8 +608,16 @@ namespace SkyAndCloud
                 }
                 catch { }
                 }
+
             if (cloudTemp == null) { cloudTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("CLoud")); cloudTemp.SetActive(false); }
-            DontDestroyOnLoad(cloudTemp);
+             /*if (godLightTemp != null) { Debug.Log("RunningG"); godLightTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("GodRays")); godLightTemp.SetActive(false); Debug.Log("GL"); }
+             if (rainTemp != null) { Debug.Log("RunningR"); rainTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("Rain Particles")); rainTemp.SetActive(false); Debug.Log("RP"); } 
+             if (thunderCloudTemp != null) { Debug.Log("RunningT"); thunderCloudTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("THUNDER CLOUD")); thunderCloudTemp.SetActive(false); Debug.Log("TC"); } 
+            */DontDestroyOnLoad(cloudTemp);
+            /*DontDestroyOnLoad(godLightTemp);
+            DontDestroyOnLoad(rainTemp);
+            DontDestroyOnLoad(thunderCloudTemp);*/
+
             if (cloudAmountTemp != cloudAmount) { resetCloudsNow = true; clouds[1] = null; cloudAmountTemp = cloudAmount; try { for (int k = cloudAmount; k < clouds.Length; k++) { Destroy(clouds[k].gameObject); Destroy(shadow[k].gameObject); } } catch { } }
             try
             {
@@ -640,7 +648,7 @@ namespace SkyAndCloud
                         clouds[i].transform.localScale = new Vector3(15, 15, 15);
                         clouds[i].GetComponent<ParticleSystem>().maxParticles = (int)clouds[i].transform.position.y;
                         shadow[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                        shadow[i].GetComponent<Collider>().transform.parent = shadow[i].transform;
+                        Destroy(shadow[i].GetComponent<Collider>());//.transform.parent = shadow[i].transform;
                         shadow[i].layer = clouds[i].layer;
                         shadow[i].transform.position = clouds[i].transform.position;
                         shadow[i].transform.parent = clouds[i].transform;
@@ -695,12 +703,10 @@ namespace SkyAndCloud
                     clouds = new GameObject[cloudAmount];
                 }
                 foreach (GameObject oneShadow in shadow) { if (isShadowoff) { oneShadow.transform.localScale = new Vector3(0, 0, 0); } else { oneShadow.transform.localScale = new Vector3(4, 2.5f, 2.5f); } }
+
+
             }
             catch { }
-
-            try { if (godLightTemp != null) { godLightTemp = GameObject.Find("GodRays"); godLightTemp.SetActive(false); } } catch { }
-            try { if (rainTemp != null) { rainTemp = GameObject.Find("Rain Particles"); rainTemp.SetActive(false); } } catch { }
-            try { if (thunderCloudTemp != null) { thunderCloudTemp = GameObject.Find("THUNDER CLOUD"); thunderCloudTemp.SetActive(false); } } catch { }
         }
      /*   void OnParticleCollision(GameObject other)
         {
