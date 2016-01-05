@@ -669,27 +669,30 @@ namespace SkyAndCloud
 
         void Update()
         {
-            if (isShadowOff)
+            try
             {
-                try
+                if (isShadowOff)
                 {
-                    foreach (GameObject shadowMaker in shadow)
+                    try
                     {
-                        shadowMaker.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                        foreach (GameObject shadowMaker in shadow)
+                        {
+                            shadowMaker.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                        }
                     }
+                    catch { }
                 }
-                catch { }
+                isBoundairesAway = bool.Parse(Settings[15]);
+                if (isBoundairesAway)
+                {
+                    try { GameObject.Find("WORLD BOUNDARIES").transform.localScale = new Vector3(0, 0, 0); } catch { }
+                }
+                if (isFogAway)
+                {
+                    try { GameObject.Find("Fog Volume").transform.position = new Vector3(0, Mathf.Infinity, 0); } catch { }
+                }
             }
-            isBoundairesAway = bool.Parse(Settings[15]);
-            if (isBoundairesAway)
-            {
-                try { GameObject.Find("WORLD BOUNDARIES").transform.localScale = new Vector3(0, 0, 0); } catch { }
-            }
-            if (isFogAway)
-            {
-                try { GameObject.Find("Fog Volume").transform.position = new Vector3(0, Mathf.Infinity, 0); } catch { }
-            }
-
+            catch { }
             if (settingTempHasBeenChanged)
                 {
                 settingTempHasBeenChanged = false;
