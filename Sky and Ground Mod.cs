@@ -18,7 +18,7 @@ namespace SkyAndCloud
         public override string DisplayName { get { return "Sky and Ground Mod"; } }
         public override string BesiegeVersion { get { return "v0.23"; } }
         public override string Author { get { return "覅是"; } }
-        public override Version Version { get { return new Version("0.8"); } }
+        public override Version Version { get { return new Version("0.82"); } }
         public override bool CanBeUnloaded { get { return true; } }
 
         public GameObject temp;
@@ -633,7 +633,7 @@ namespace SkyAndCloud
                     WWW png = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png");
                     WWW jpg = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg");
                     GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = null;
-                    if (png.size > 5)
+                    if (png.size > 5) 
                     {
                         try
                         {
@@ -642,6 +642,7 @@ namespace SkyAndCloud
                         catch { }
                         try
                         {
+                            GameObject.Find("terrainObject").AddComponent<Renderer>();
                             GameObject.Find("terrainObject").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture;
                         }
                         catch { }
@@ -655,6 +656,7 @@ namespace SkyAndCloud
                         catch { }
                         try
                         {
+                            GameObject.Find("terrainObject").AddComponent<Renderer>();
                             GameObject.Find("terrainObject").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture;
                         }
                         catch { }
@@ -682,7 +684,6 @@ namespace SkyAndCloud
                     }
                     catch { }
                 }
-                isBoundairesAway = bool.Parse(Settings[15]);
                 if (isBoundairesAway)
                 {
                     try { GameObject.Find("WORLD BOUNDARIES").transform.localScale = new Vector3(0, 0, 0); } catch { }
@@ -691,6 +692,7 @@ namespace SkyAndCloud
                 {
                     try { GameObject.Find("Fog Volume").transform.position = new Vector3(0, Mathf.Infinity, 0); } catch { }
                 }
+                try { GameObject.Find("FloorBig").transform.localScale = new Vector3(floorScale[0], floorScale[1], floorScale[2]); } catch { }
             }
             catch { }
             if (settingTempHasBeenChanged)
@@ -751,7 +753,7 @@ namespace SkyAndCloud
             //Debug.Log(Application.loadedLevel);
             try
             {
-                        sun.transform.position = GameObject.Find("Directional light").transform.forward * -600 + GameObject.Find("Main Camera").transform.position;
+                sun.transform.position = GameObject.Find("Directional light").transform.forward * -600 + GameObject.Find("Main Camera").transform.position;
                 if (GameObject.Find("Directional light").GetComponent<Light>().flare == null)
                 {
                     /*WWW flare = new WWW("File:///" + Application.dataPath + "/Mods/50mm Zoom.flare");
@@ -839,20 +841,20 @@ namespace SkyAndCloud
                         clouds[i].GetComponent<ParticleSystem>().startLifetime = 5;
                         clouds[i].transform.localScale = new Vector3(15, 15, 15);
                         clouds[i].GetComponent<ParticleSystem>().maxParticles = (int)clouds[i].transform.position.y;
-                        shadow[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        /*shadow[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                         Destroy(shadow[i].GetComponent<Collider>());//.transform.parent = shadow[i].transform;
+                        shadow[i].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly; 
                         shadow[i].layer = clouds[i].layer;
                         shadow[i].transform.position = clouds[i].transform.position;
                         shadow[i].transform.parent = clouds[i].transform;
                         shadow[i].transform.localPosition = new Vector3(0.5f, 0, 0);
                         shadow[i].transform.localEulerAngles = new Vector3(18,10,353);
                         shadow[i].transform.localScale = new Vector3(4,2.5f,2.5f);
-                        shadow[i].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
                         shadow[i].GetComponent<Renderer>().receiveShadows = true;
                         foreach (Material mtrl in shadow[i].GetComponent<Renderer>().materials) {
                             mtrl.color= new Color(1, 1, 1, 0.3f);
                         }
-                        Destroy(shadow[i].GetComponent<Renderer>().material.mainTexture);
+                        Destroy(shadow[i].GetComponent<Renderer>().material.mainTexture);*/
                         clouds[i].transform.LookAt(new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)));
                         try
                         {
@@ -897,7 +899,7 @@ namespace SkyAndCloud
                     foreach (GameObject cloud in Resources.FindObjectsOfTypeAll(typeof(GameObject))) { if (cloud != cloudTemp && cloud.name.Equals("CLoud(Clone)(Clone)")) { Destroy(cloud); } }
                     clouds = new GameObject[cloudAmount];
                 }
-                foreach (GameObject oneShadow in shadow) { if (isShadowOff) { oneShadow.transform.localScale = new Vector3(0, 0, 0); } else { oneShadow.transform.localScale = new Vector3(4, 2.5f, 2.5f); } }
+                //foreach (GameObject oneShadow in shadow) { if (isShadowOff) { oneShadow.transform.localScale = new Vector3(0, 0, 0); } else { oneShadow.transform.localScale = new Vector3(4, 2.5f, 2.5f); } }
 
 
             }
