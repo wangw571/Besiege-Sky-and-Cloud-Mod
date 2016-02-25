@@ -16,9 +16,9 @@ namespace SkyAndCloud
     {
         public override string Name { get { return "Sky_and_Ground_Mod"; } }
         public override string DisplayName { get { return "Sky and Ground Mod"; } }
-        public override string BesiegeVersion { get { return "v0.23"; } }
+        public override string BesiegeVersion { get { return "v0.25"; } }
         public override string Author { get { return "覅是"; } }
-        public override Version Version { get { return new Version("0.82"); } }
+        public override Version Version { get { return new Version("0.85"); } }
         public override bool CanBeUnloaded { get { return true; } }
 
         public GameObject temp;
@@ -29,7 +29,8 @@ namespace SkyAndCloud
         {
 
 
-            GameObject temp = new GameObject();
+            temp = new GameObject();
+            temp.name = "Sky and Ground Mod";
             temp.AddComponent<SkyAndCloudMod>();
             GameObject.DontDestroyOnLoad(temp);
 
@@ -39,7 +40,6 @@ namespace SkyAndCloud
             GameObject.Destroy(temp);
         }
     }
-
     public class SkyAndCloudMod : MonoBehaviour
     {
 
@@ -78,6 +78,7 @@ namespace SkyAndCloud
         private bool isShadowOff = false;
 
         public bool isBoundairesAway = false;
+        public bool IsNightMode = false;
 
         private bool resetCloudsNow = false;
         private int tempLevel;
@@ -88,6 +89,7 @@ namespace SkyAndCloud
         public string settingTemp;
         public string[] Settings;
         public bool settingTempHasBeenChanged = false;
+        private bool DetectedStartedSimulating = false;
         void OnLoad()
         {
             sun = new GameObject();
@@ -96,23 +98,23 @@ namespace SkyAndCloud
         }
         void Start()
         {
-            
-                        /*sun = new GameObject();
-                        sun.name = "SunShine";
-                        sun.SetActive(true);
-                        DontDestroyOnLoad(sun);
-                   
-                        sun.AddComponent<Light>();
-                        sun.AddComponent<LensFlare>();
-            sun.AddComponent<LensFlare>().flare = new Flare();
-            sun.GetComponent<LensFlare>().color = Color.yellow;
-                        sun.GetComponent<LensFlare>().brightness = 10;
-                        sun.GetComponent<LensFlare>().fadeSpeed = 0;
-                        sun.GetComponent<Light>().type = LightType.Point;
-                        sun.GetComponent<Light>().range = 3000;
-                        // sun.GetComponent<Light>().color = Color.red;
-                        sun.GetComponent<Light>().intensity = 0f;
-                        sun.GetComponent<Light>().shadows = LightShadows.Soft;*/
+
+            /*sun = new GameObject();
+            sun.name = "SunShine";
+            sun.SetActive(true);
+            DontDestroyOnLoad(sun);
+
+            sun.AddComponent<Light>();
+            sun.AddComponent<LensFlare>();
+sun.AddComponent<LensFlare>().flare = new Flare();
+sun.GetComponent<LensFlare>().color = Color.yellow;
+            sun.GetComponent<LensFlare>().brightness = 10;
+            sun.GetComponent<LensFlare>().fadeSpeed = 0;
+            sun.GetComponent<Light>().type = LightType.Point;
+            sun.GetComponent<Light>().range = 3000;
+            // sun.GetComponent<Light>().color = Color.red;
+            sun.GetComponent<Light>().intensity = 0f;
+            sun.GetComponent<Light>().shadows = LightShadows.Soft;*/
             //Application.LoadLevel (5);
             StartCoroutine(groundTexture());
 
@@ -335,27 +337,27 @@ namespace SkyAndCloud
 
             }, "Put the fog back");//Reset Fog
 
-             Commands.RegisterCommand("ResetCloudSpeed", (args, notUses) =>
-            {
+            Commands.RegisterCommand("ResetCloudSpeed", (args, notUses) =>
+           {
 
-                if (args.Length < 2)
-                {
-                    return "ERROR!You need to have two speed value!";
-                }
-                try
-                {
-                    cloudSpeed[0] = float.Parse(args[0]);
-                    cloudSpeed[1] = float.Parse(args[1]);
-                    settingTempHasBeenChanged = true;
-                }
-                catch
-                {
-                    return "ERROR!";
-                }
-                CustomCloudSpeed = true;
-                return "The speed will be: X: " + cloudSpeed[0] + "  Z: " + cloudSpeed[1];
+               if (args.Length < 2)
+               {
+                   return "ERROR!You need to have two speed value!";
+               }
+               try
+               {
+                   cloudSpeed[0] = float.Parse(args[0]);
+                   cloudSpeed[1] = float.Parse(args[1]);
+                   settingTempHasBeenChanged = true;
+               }
+               catch
+               {
+                   return "ERROR!";
+               }
+               CustomCloudSpeed = true;
+               return "The speed will be: X: " + cloudSpeed[0] + "  Z: " + cloudSpeed[1];
 
-            }, "Change the moving speed of yur clouds by x and z");//Cloud speed
+           }, "Change the moving speed of yur clouds by x and z");//Cloud speed
 
             Commands.RegisterCommand("ResetFloorSizeScale", (args, notUses) =>
             {
@@ -387,7 +389,7 @@ namespace SkyAndCloud
                 try
                 {
                     cameraDrawingRange = float.Parse(args[0]);
-                    if (cameraDrawingRange <= 1 ) { return "Your Range is not available. "; }
+                    if (cameraDrawingRange <= 1) { return "Your Range is not available. "; }
                     else { GameObject.Find("Main Camera").GetComponent<Camera>().farClipPlane = cameraDrawingRange; settingTempHasBeenChanged = true; }
                 }
                 catch
@@ -409,7 +411,7 @@ namespace SkyAndCloud
                         isShadowOff = true;
                         settingTempHasBeenChanged = true;
                         return "The shadow has been turned off";
-                        
+
                     }
 
                     else if (isShadowOff)
@@ -538,7 +540,7 @@ namespace SkyAndCloud
             Commands.RegisterCommand("ResetWorldBoundaries", (args, notUses) =>
             {
 
-                try { GameObject.Find("WORLD BOUNDARIES").transform.position = new Vector3(1,1,1);
+                try { GameObject.Find("WORLD BOUNDARIES").transform.position = new Vector3(1, 1, 1);
                     isBoundairesAway = false;
                     settingTempHasBeenChanged = true;
                     return "The World Boundaries will be reset.";
@@ -546,80 +548,41 @@ namespace SkyAndCloud
 
             }, "Put the World Boundaries back");//Reset World Boundaries
 
-            if (File.Exists(Application.dataPath + "/Mods/Sky and GroundTexture Mod Setting Tempelate.txt") && new FileInfo((Application.dataPath + "/Mods/Sky and GroundTexture Mod Setting Tempelate.txt")).Length >= 5 )
+            Commands.RegisterCommand("On/OffNightMode", (args, notUses) =>
             {
-                settingTemp = File.ReadAllText(Application.dataPath + "/Mods/Sky and GroundTexture Mod Setting Tempelate.txt");
-                //Debug.Log(settingTemp);
-                Settings = settingTemp.Trim().Split('|');
+
                 try
                 {
-                    cloudAmount = int.Parse(Settings[0]);
-
-                    cloudSizeScale = int.Parse(Settings[1]);
-
-                    lowerCloudsMinHeight = float.Parse(Settings[2]);
-                    lowerCloudsMaxHeight = float.Parse(Settings[3]);
-                    higherCloudsMinHeight = float.Parse(Settings[4]);
-                    higherCloudsMinHeight = float.Parse(Settings[5]);
-                    
-                    higherCloudsColor = new Color(float.Parse(Settings[6].Split(',')[0]), float.Parse(Settings[6].Split(',')[1]), float.Parse(Settings[6].Split(',')[2]), float.Parse(Settings[6].Split(',')[3]));
-                    lowerCloudsColor = new Color(float.Parse(Settings[7].Split(',')[0]), float.Parse(Settings[7].Split(',')[1]), float.Parse(Settings[7].Split(',')[2]), float.Parse(Settings[7].Split(',')[3]));
-                    
-                    SkyColor = new Color(int.Parse(Settings[8].Split(',')[0]), int.Parse(Settings[8].Split(',')[1]), int.Parse(Settings[8].Split(',')[2]), int.Parse(Settings[8].Split(',')[3]));
-
-                    CustomCloudSpeed = bool.Parse(Settings[9]);
-                    if (CustomCloudSpeed)
+                    if (!IsNightMode)
                     {
-                        cloudSpeed[0] = float.Parse(Settings[10].Split(',')[0]);
-                        cloudSpeed[1] = float.Parse(Settings[10].Split(',')[1]);
+                        IsNightMode = true;
+                        GameObject.Find("Main Camera").GetComponent<Camera>().backgroundColor = new Color(0.1f, 0.1f, 0.1f);
+                        GameObject.Find("Directional light").GetComponent<Light>().intensity = 0f;
+                        GameObject.Find("Directional light").AddComponent<LensFlare>();
+                        GameObject.Find("Directional light").GetComponent<LensFlare>().brightness = 10;
+                        GameObject.Find("Directional light").GetComponent<LensFlare>().color = Color.white;
+                        GameObject.Find("Directional light").GetComponent<LensFlare>().enabled = true;
+                        GameObject.Find("Directional light").GetComponent<LensFlare>().fadeSpeed = 1;
+                        ItIsNightSoEveryCloudShouldBeDeepDarkFantasy();
+                        settingTempHasBeenChanged = true;
+                        return "Night is coming......";
                     }
-                    
-                    isFogAway = bool.Parse(Settings[11]);
-                    if (isFogAway)
+                    else
                     {
-                        try { GameObject.Find("Fog Volume").transform.position = new Vector3(0, Mathf.Infinity, 0); } catch { }
+                        IsNightMode = false;
+                        GameObject.Find("Main Camera").GetComponent<Camera>().backgroundColor = new Color(0.5803922f, 0.6509804f, 0.7058824f, 1); ;
+                        GameObject.Find("Directional light").GetComponent<Light>().intensity = 0.92f;
+                        Destroy(GameObject.Find("Directional light").GetComponent<LensFlare>());
+                        ItIsDaySoEveryCloudShouldBeBright();
+                        settingTempHasBeenChanged = true;
+                        return "Day is coming _(:3」∠)_";
                     }
-
-                    floorScale = new Vector3(float.Parse(Settings[12].Split(',')[0]), float.Parse(Settings[12].Split(',')[1]), float.Parse(Settings[12].Split(',')[2]));
-                    try { GameObject.Find("FloorBig").transform.localScale = new Vector3(floorScale[0], floorScale[1], floorScale[2]); } catch { }
-
-                    cameraDrawingRange = float.Parse(Settings[13]);
-
-                    isShadowOff = bool.Parse(Settings[14]);
-                    if (isShadowOff)
-                    {
-                        try
-                        {
-                            foreach (GameObject shadowMaker in shadow)
-                            {
-                                shadowMaker.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                            }
-                        }
-                        catch { }
-                    }
-                    isBoundairesAway = bool.Parse(Settings[15]);
-                    if (isBoundairesAway)
-                    {
-                        try { GameObject.Find("WORLD BOUNDARIES").transform.localScale = new Vector3(0, 0, 0); } catch { }
-                    }
-                    Debug.Log("Finished Loading All Settings!");
                 }
-                catch { Debug.Log("Your Setting Tempelate cannot be read!"); }
-            }
-            else
-            {
-                File.Create(Application.dataPath + "/Mods/Sky and GroundTexture Mod Setting Tempelate.txt");
-            }
+                catch { return "The Main Camera does not exists!"; }
 
-            /*    Commands.RegisterCommand("TryFloatingStones", (args, notUses) =>
-                {
-
-                    try { AsyncOperation poop = Application.LoadLevelAsync(22); return poop + "Level will be load."; } catch { return "The Level cannot be load!"; }
-
-                }, "Try load floating stones");//Try load Floating Stones*/
-
-
+            }, "Turn on/off the night mode");//Night
         }
+            
 
         //public int CurrentLevel = 2;
         IEnumerator groundTexture()
@@ -643,7 +606,8 @@ namespace SkyAndCloud
                         try
                         {
                             GameObject.Find("terrainObject").AddComponent<Renderer>();
-                            GameObject.Find("terrainObject").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture;
+                            GameObject.Find("terrainObject").GetComponent<Terrain>().materialTemplate =new Material(Shader.Find("Nature / Terrain / Diffuse"));
+                            GameObject.Find("terrainObject").GetComponent<Terrain>().materialTemplate.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture;
                         }
                         catch { }
                     }
@@ -657,7 +621,8 @@ namespace SkyAndCloud
                         try
                         {
                             GameObject.Find("terrainObject").AddComponent<Renderer>();
-                            GameObject.Find("terrainObject").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture;
+                            GameObject.Find("terrainObject").GetComponent<Terrain>().materialTemplate = new Material(Shader.Find("Nature / Terrain / Diffuse"));
+                            GameObject.Find("terrainObject").GetComponent<Terrain>().materialTemplate.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture;
                         }
                         catch { }
                     }
@@ -743,7 +708,9 @@ namespace SkyAndCloud
                 settingTemp += "|";
 
                 settingTemp += isBoundairesAway;//15
+                settingTemp += "|";
 
+                settingTemp += IsNightMode;//16
                 File.WriteAllText(Application.dataPath + "/Mods/Sky and GroundTexture Mod Setting Tempelate.txt", settingTemp);
                 settingTempHasBeenChanged = false;
             }
@@ -751,19 +718,18 @@ namespace SkyAndCloud
         void FixedUpdate()
         {
             //Debug.Log(Application.loadedLevel);
+            if (AddPiece.isSimulating && !DetectedStartedSimulating && IsNightMode)
+            {
+                DetectedStartedSimulating = true;
+                ItIsNightSoEveryCloudShouldBeDeepDarkFantasy();
+            }
+            if (!AddPiece.isSimulating) { DetectedStartedSimulating = false; }
             try
             {
                 sun.transform.position = GameObject.Find("Directional light").transform.forward * -600 + GameObject.Find("Main Camera").transform.position;
-                if (GameObject.Find("Directional light").GetComponent<Light>().flare == null)
-                {
-                    /*WWW flare = new WWW("File:///" + Application.dataPath + "/Mods/50mm Zoom.flare");
-                    LensFlare sunf = new LensFlare(); sunf.GetComponent<LensFlare>().flare = new WWW("File:///" + Application.dataPath + "/Mods/50mm Zoom.flare").assetBundle ;
-                    sunf.color = Color.white;
-                    sunf.brightness = 10;
-                    sunf.fadeSpeed = 0;*/
-                                    }
-                GameObject.Find("Directional light").transform.eulerAngles = new Vector3(GameObject.Find("Directional light").transform.eulerAngles.x, 120, GameObject.Find("Directional light").transform.eulerAngles.z);
+                //GameObject.Find("Directional light").transform.eulerAngles = new Vector3(GameObject.Find("Directional light").transform.eulerAngles.x, 120, GameObject.Find("Directional light").transform.eulerAngles.z);
                 GameObject.Find("Directional light").GetComponent<Light>().shadows = LightShadows.Soft;
+                GameObject.Find("Directional light").AddComponent<LensFlare>();
                 /*if (!GameObject.Find("Sun Sphere"))
                 {
                     GameObject sunS = new GameObject();
@@ -799,6 +765,7 @@ namespace SkyAndCloud
                 {
                    // GameObject.Find("Main Camera").GetComponent<Camera>().backgroundColor = Color.cyan;
                     tempLevel = Application.loadedLevel;
+                    读取设定();
                 }
                 catch { }
                 }
@@ -837,6 +804,7 @@ namespace SkyAndCloud
                             clouds[i].layer = 12;
                         }
                         clouds[i].SetActive(true);
+                        clouds[i].transform.SetParent(GameObject.Find("Sky and Ground Mod").transform);
                         clouds[i].GetComponent<ParticleSystem>().startSize = 30;
                         clouds[i].GetComponent<ParticleSystem>().startLifetime = 5;
                         clouds[i].transform.localScale = new Vector3(15, 15, 15);
@@ -917,10 +885,226 @@ namespace SkyAndCloud
 
 
         }*/
+        void ItIsNightSoEveryCloudShouldBeDeepDarkFantasy()
+        {
+            for (int i = 0; i <= clouds.Length; i++)
+            {
+                if (clouds[1] == null && cloudAmount > 1)
+                {
+                    if (i < (int)clouds.Length / 3)
+                    {
+                        clouds[i].GetComponent<ParticleSystem>().startColor = higherCloudsColor / 20;
+                    }
+                    else
+                    {
+                        clouds[i].GetComponent<ParticleSystem>().startColor = lowerCloudsColor / 20;
+                    }
+                }
+            }
+            /*foreach (ParticleSystemRenderer f in FindObjectsOfType<ParticleSystemRenderer>())
+            {
+                try {
+                    if (f.GetComponent<ParticleSystemRenderer>().material.name.Contains("Flame"))
+                    {
+                        f.gameObject.AddComponent<ShakeLightingWholalalalalalallalala>();
+                    }
+                } catch { }
+            }*/
+            foreach (FireController f in FindObjectsOfType<FireController>())
+            {
+                if (!f.GetComponent<ShakeLightingWholalalalalalallalala>())
+                {
+                    f.gameObject.AddComponent<ShakeLightingWholalalalalalallalala>();
+                }
+            }
+            
+          }
+        void ItIsDaySoEveryCloudShouldBeBright()
+        {
+            for (int i = 0; i <= clouds.Length; i++)
+            {
+                if (clouds[1] == null && cloudAmount > 1)
+                {
+                    if (i < (int)clouds.Length / 3)
+                    {
+                        clouds[i].GetComponent<ParticleSystem>().startColor = higherCloudsColor;
+                    }
+                    else
+                    {
+                        clouds[i].GetComponent<ParticleSystem>().startColor = lowerCloudsColor;
+                    }
+                }
+            }
+            }
+        void 读取设定()
+        {
+            if (File.Exists(Application.dataPath + "/Mods/Sky and GroundTexture Mod Setting Tempelate.txt") && new FileInfo((Application.dataPath + "/Mods/Sky and GroundTexture Mod Setting Tempelate.txt")).Length >= 5)
+            {
+                settingTemp = File.ReadAllText(Application.dataPath + "/Mods/Sky and GroundTexture Mod Setting Tempelate.txt");
+                //Debug.Log(settingTemp);
+                Settings = settingTemp.Trim().Split('|');
+                try
+                {
+                    cloudAmount = int.Parse(Settings[0]);
+
+                    cloudSizeScale = int.Parse(Settings[1]);
+
+                    lowerCloudsMinHeight = float.Parse(Settings[2]);
+                    lowerCloudsMaxHeight = float.Parse(Settings[3]);
+                    higherCloudsMinHeight = float.Parse(Settings[4]);
+                    higherCloudsMinHeight = float.Parse(Settings[5]);
+
+                    higherCloudsColor = new Color(float.Parse(Settings[6].Split(',')[0]), float.Parse(Settings[6].Split(',')[1]), float.Parse(Settings[6].Split(',')[2]), float.Parse(Settings[6].Split(',')[3]));
+                    lowerCloudsColor = new Color(float.Parse(Settings[7].Split(',')[0]), float.Parse(Settings[7].Split(',')[1]), float.Parse(Settings[7].Split(',')[2]), float.Parse(Settings[7].Split(',')[3]));
+
+                    SkyColor = new Color(int.Parse(Settings[8].Split(',')[0]), int.Parse(Settings[8].Split(',')[1]), int.Parse(Settings[8].Split(',')[2]), int.Parse(Settings[8].Split(',')[3]));
+
+                    CustomCloudSpeed = bool.Parse(Settings[9]);
+                    if (CustomCloudSpeed)
+                    {
+                        cloudSpeed[0] = float.Parse(Settings[10].Split(',')[0]);
+                        cloudSpeed[1] = float.Parse(Settings[10].Split(',')[1]);
+                    }
+
+                    isFogAway = bool.Parse(Settings[11]);
+                    if (isFogAway)
+                    {
+                        try { GameObject.Find("Fog Volume").transform.position = new Vector3(0, Mathf.Infinity, 0); } catch { }
+                    }
+
+                    floorScale = new Vector3(float.Parse(Settings[12].Split(',')[0]), float.Parse(Settings[12].Split(',')[1]), float.Parse(Settings[12].Split(',')[2]));
+                    try { GameObject.Find("FloorBig").transform.localScale = new Vector3(floorScale[0], floorScale[1], floorScale[2]); } catch { }
+
+                    cameraDrawingRange = float.Parse(Settings[13]);
+
+                    isShadowOff = bool.Parse(Settings[14]);
+                    if (isShadowOff)
+                    {
+                        try
+                        {
+                            foreach (GameObject shadowMaker in shadow)
+                            {
+                                shadowMaker.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                            }
+                        }
+                        catch { }
+                    }
+                    isBoundairesAway = bool.Parse(Settings[15]);
+                    if (isBoundairesAway)
+                    {
+                        try { GameObject.Find("WORLD BOUNDARIES").transform.localScale = new Vector3(0, 0, 0); } catch { }
+                    }
+                    IsNightMode = bool.Parse(Settings[16].Trim());
+                    if (IsNightMode)
+                    {
+                        try
+                        {
+                            GameObject.Find("Main Camera").GetComponent<Camera>().backgroundColor = new Color(0.1f, 0.1f, 0.1f);
+                            GameObject.Find("Directional light").GetComponent<Light>().intensity = 0f;
+                            GameObject.Find("Directional light").AddComponent<LensFlare>();
+                            GameObject.Find("Directional light").GetComponent<LensFlare>().brightness = 10;
+                            GameObject.Find("Directional light").GetComponent<LensFlare>().color = Color.white;
+                            GameObject.Find("Directional light").GetComponent<LensFlare>().enabled = true;
+                            GameObject.Find("Directional light").GetComponent<LensFlare>().fadeSpeed = 1;
+                            ItIsNightSoEveryCloudShouldBeDeepDarkFantasy();
+                        }
+                        catch { }
+                    }
+                    Debug.Log("Finished Loading All Settings!");
+                }
+                catch { Debug.Log("Your Setting Tempelate cannot be read!"); }
+            }
+            else
+            {
+                File.Create(Application.dataPath + "/Mods/Sky and GroundTexture Mod Setting Tempelate.txt");
+            }//读取设定
+
+            /*    Commands.RegisterCommand("TryFloatingStones", (args, notUses) =>
+                {
+
+                    try { AsyncOperation poop = Application.LoadLevelAsync(22); return poop + "Level will be load."; } catch { return "The Level cannot be load!"; }
+
+                }, "Try load floating stones");//Try load Floating Stones*/
 
 
-
-
-
+        }
     }
-}
+    public class ShakeLightingWholalalalalalallalala : MonoBehaviour
+    {
+        public float FireLightIntensity;
+        public float FireLightRange;
+        public float Shakefrequency;
+        public float ShakeMax;
+        public float ShakeMin;
+        public Color FireColor;
+        public Light ThisLight;
+        public bool ShakeTheLight = true;
+        private float lastFUTime;
+        /*private int FUcount;*/
+
+        void Start ()
+        {
+            //Pre-Setting
+            FireColor = new Color(0.9f,0.6f,0);
+            ShakeMax = 1.3f;
+            ShakeMin = 0.9f;
+            FireLightIntensity = 2f;
+            FireLightRange = 7f;
+
+            float ScaleMag = Vector3.Magnitude(this.transform.localScale);
+
+            if (!this.gameObject.GetComponent<Light>())
+            {
+                ThisLight = this.gameObject.AddComponent<Light>();
+                ThisLight.type = LightType.Point;
+                ThisLight.color = FireColor;
+                ThisLight.intensity = FireLightIntensity * ScaleMag;
+                ThisLight.range = FireLightRange * ScaleMag;
+                ThisLight.enabled = false;
+                /*lastFUTime = this.GetComponent<ParticleSystem>().time;*/
+            }
+            else 
+            {
+                DestroyImmediate(this.GetComponent<ShakeLightingWholalalalalalallalala>());
+            }
+        }
+
+        /*void FixedUpdate()//弃用方案
+        {
+            int Burning = 1;
+            float ScaleMag = Vector3.Magnitude(this.transform.localScale);
+             if (this.GetComponent<ParticleSystem>() && FUcount % 2 ==0 )
+            {
+               if (this.GetComponent<ParticleSystem>().time == lastFUTime) { Burning--; }
+                lastFUTime = this.GetComponent<ParticleSystem>().time;
+            }
+            else {
+                Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
+                    }
+            if (ShakeTheLight)
+            {
+                ThisLight.intensity = FireLightIntensity * ScaleMag * (UnityEngine.Random.value * (ShakeMax-ShakeMin) + ShakeMin) * Burning;
+                ThisLight.range = FireLightRange * ScaleMag * (UnityEngine.Random.value * (ShakeMax - ShakeMin) + ShakeMin);
+                ThisLight.color = FireColor;
+            }
+            }
+        }*/
+        void FixedUpdate()
+        {
+            float ScaleMag = Vector3.Magnitude(this.transform.localScale);
+             if (this.GetComponent<FireController>())
+            {
+                ThisLight.enabled = this.GetComponent<FireController>().onFire;
+            }
+            else {
+                Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
+                    }
+            if (ShakeTheLight)
+            {
+                ThisLight.intensity = FireLightIntensity /* ScaleMag */;
+                ThisLight.range = FireLightRange /* ScaleMag */ * (UnityEngine.Random.value * (ShakeMax - ShakeMin) + ShakeMin);
+                ThisLight.color = FireColor;
+            }
+            }
+        }
+    }
