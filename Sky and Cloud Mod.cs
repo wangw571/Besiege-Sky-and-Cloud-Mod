@@ -16,9 +16,9 @@ namespace SkyAndCloud
     {
         public override string Name { get { return "Cloud_Mod"; } }
         public override string DisplayName { get { return "Cloud Mod"; } }
-        public override string BesiegeVersion { get { return "v0.27"; } }
+        public override string BesiegeVersion { get { return "v0.3"; } }
         public override string Author { get { return "覅是"; } }
-        public override Version Version { get { return new Version("0.83"); } }
+        public override Version Version { get { return new Version("0.88"); } }
         public override bool CanBeUnloaded { get { return true; } }
 
         public GameObject temp;
@@ -129,7 +129,7 @@ namespace SkyAndCloud
                 try
                 {
                     int cccloudcloudAmount = int.Parse(args[0]);
-                    if (cccloudcloudAmount < 0 ^ cccloudcloudAmount > 3000) { return "Your cloud amount is not available. "; }
+                    if (cccloudcloudAmount < 0 || cccloudcloudAmount > 3000) { return "Your cloud amount is not available. "; }
                     else { cloudAmount = cccloudcloudAmount; settingTempHasBeenChanged = true; }
                 }
                 catch
@@ -319,22 +319,36 @@ namespace SkyAndCloud
             Commands.RegisterCommand("CleanFog", (args, notUses) =>
             {
 
+            try
+            {
+                GameObject.Find("Fog Volume").transform.position = new Vector3(0, Mathf.Infinity, 0);
+                GameObject.Find("Main Camera").GetComponent<ColorfulFog>().useCustomDepthTexture = true;
+                isFogAway = true;
+                settingTempHasBeenChanged = true;
+                return "The Fog will be moved away";
+            }
+            catch
+            {
                 try
                 {
-                    GameObject.Find("Fog Volume").transform.position = new Vector3(0, Mathf.Infinity, 0);
-                    isFogAway = true;
+                    GameObject.Find("Fog Volume Dark").transform.position = new Vector3(0, Mathf.Infinity, 0);
+                    GameObject.Find("Main Camera").GetComponent<ColorfulFog>().useCustomDepthTexture = true;
+                        GameObject.Find("Main Camera").GetComponent<ColorfulFog>().distanceFog = false;
+                        isFogAway = true;
                     settingTempHasBeenChanged = true;
                     return "The Fog will be moved away";
-                }
-                catch
-                {
+                } catch {
                     try
                     {
-                        GameObject.Find("Fog Volume Dark").transform.position = new Vector3(0, Mathf.Infinity, 0);
-                    isFogAway = true;
-                    settingTempHasBeenChanged = true;
-                    return "The Fog will be moved away";                    
-                     } catch { return "The Fog does not exist!"; }
+                        GameObject.Find("FOG SPHERE").transform.position = new Vector3(0, Mathf.Infinity, 0);
+                            GameObject.Find("Main Camera").GetComponent<ColorfulFog>().useCustomDepthTexture = true;
+                            GameObject.Find("Main Camera").GetComponent<ColorfulFog>().distanceFog = false;
+                            isFogAway = true;
+                            settingTempHasBeenChanged = true;
+                            return "The Fog will be moved away";
+                        }
+                        catch { return "The Fog does not exist!"; }
+                    }
                 }
 
             }, "Put the fog away to make your view cleaner");//Clean Fog
@@ -342,7 +356,9 @@ namespace SkyAndCloud
             Commands.RegisterCommand("ResetFog", (args, notUses) =>
             {
 
-                try { GameObject.Find("Fog Volume").transform.position = new Vector3(0, GameObject.Find("Main Camera").transform.position.y - 50, 0);
+                try {
+                    GameObject.Find("Fog Volume").transform.position = new Vector3(0, GameObject.Find("Main Camera").transform.position.y - 50, 0);
+                    GameObject.Find("Main Camera").GetComponent<ColorfulFog>().useCustomDepthTexture = false;
                     isFogAway = false;
                     settingTempHasBeenChanged = true;
                     return "The Fog will be reset under your camera";
@@ -352,11 +368,25 @@ namespace SkyAndCloud
                     try
                     {
                         GameObject.Find("Fog Volume Dark").transform.position = new Vector3(0, GameObject.Find("Main Camera").transform.position.y - 50, 0);
+                        GameObject.Find("Main Camera").GetComponent<ColorfulFog>().useCustomDepthTexture = false;
+                        GameObject.Find("Main Camera").GetComponent<ColorfulFog>().distanceFog = true;
+                        Debug.Log("HERE");
                         isFogAway = false;
                         settingTempHasBeenChanged = true;
                         return "The Fog will be reset under your camera";
                     }
-                    catch { return "The Fog does not exist!"; }
+                    catch {
+                        try
+                        {
+                            GameObject.Find("FOG SPHERE").transform.position = new Vector3(0, GameObject.Find("Main Camera").transform.position.y - 50, 0);
+                            GameObject.Find("Main Camera").GetComponent<ColorfulFog>().useCustomDepthTexture = false;
+                            GameObject.Find("Main Camera").GetComponent<ColorfulFog>().distanceFog = true;
+                            isFogAway = false;
+                            settingTempHasBeenChanged = true;
+                            return "The Fog will be reset under your camera";
+                        }
+                        catch { return "The Fog does not exist!"; }
+                    }
                 }
 
             }, "Put the fog back");//Reset Fog
@@ -456,7 +486,7 @@ namespace SkyAndCloud
             {
                 return "ERROR!You don't have all four position and rotation values! (X, Y, Z, Rotation) \n Please do it like this\n  AddOneFloatingRock -120 110 56 92";
             }
-                if (Application.loadedLevel == 23 ^ floatingRock != null)
+                if (Application.loadedLevel == 23 || floatingRock != null)
                 {
                     floatingRock = GameObject.Find("FloatingRocks");
                     GameObject.DontDestroyOnLoad(floatingRock);
@@ -557,7 +587,16 @@ namespace SkyAndCloud
                     isBoundairesAway = true;
                     settingTempHasBeenChanged = true;
                     return "The World Boundaries will be moved away";
-                } catch { return "The World Boundaries does not exist!"; }
+                } catch {
+                    try
+                    {
+                        GameObject.Find("WORLD BOUNDARIES LARGE").transform.localScale = new Vector3(0, 0, 0);
+                        isBoundairesAway = true;
+                        settingTempHasBeenChanged = true;
+                        return "The World Boundaries will be moved away";
+                    }
+                    catch { return "The World Boundaries does not exist!"; }
+                }
 
             }, "Move the World Boundaries away");//Clean World Boundaries
 
@@ -568,7 +607,16 @@ namespace SkyAndCloud
                     isBoundairesAway = false;
                     settingTempHasBeenChanged = true;
                     return "The World Boundaries will be reset.";
-                } catch { return "The World Boundaries does not exist!"; }
+                } catch {
+                    try
+                    {
+                        GameObject.Find("WORLD BOUNDARIES LARGE").transform.position = new Vector3(1, 1, 1);
+                        isBoundairesAway = false;
+                        settingTempHasBeenChanged = true;
+                        return "The World Boundaries will be reset.";
+                    }
+                    catch { return "The World Boundaries does not exist!"; }
+                }
 
             }, "Put the World Boundaries back");//Reset World Boundaries
 
@@ -608,7 +656,45 @@ namespace SkyAndCloud
                 catch { return "The Main Camera does not exists!"; }
 
             }, "Turn on/off the night mode");//Night
-            
+
+            Commands.RegisterCommand("ApplyFloorTexture", (args, notUses) =>
+            {
+                if(args[0] == null)
+                {
+                    return "Please give me your scale!";
+                }
+                try
+                {
+                    WWW png = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png");
+                    WWW jpg = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg");
+                    GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = null;
+                    //GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture.wrapMode = TextureWrapMode.Clamp;
+                    if (png.size > 5)
+                    {
+                        try
+                        {
+                            GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture;
+                        }
+                        catch { }
+                    }
+                    else if (jpg.size > 5)
+                    {
+                        try
+                        {
+                            GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture;
+                        }
+                        catch { }
+                    }
+                    else { return("There is no such a texture file named \"GroundTexture.png\" or \"GroundTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); }
+                    GameObject.Find("FloorBig").GetComponent<Renderer>().material.SetTextureScale("_MainTex",Vector2.one * 1/float.Parse(args[0])); 
+                }
+                catch { }
+
+                return "Applied!";
+
+
+            }, "Set the floor texture");//FloorTexture
+
         }
 
 
@@ -621,34 +707,22 @@ namespace SkyAndCloud
 
                 if (Input.GetKey(KeyCode.F5))
                 {
-                    WWW png = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/SkyBoxTexture.png");
-                    WWW jpg = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/SkyBoxTexture.jpg");
-                    Texture texture = new Texture();
-                    if (png.size > 5) 
+                    WWW www = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/SkyBoxTexture.png");
+                    Texture2D texture;
+                    try 
                     {
-                        texture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/SkyBoxTexture.png").texture;
+                        byte[] TexByte = System.IO.File.ReadAllBytes(Application.dataPath + "/Mods/Blocks/Textures/SkyBoxTexture.png");
+                        texture = www.texture;
+                        GameObject.Find("STAR SPHERE").GetComponent<MeshRenderer>().material.mainTexture = texture;
+                        GameObject.Find("STAR SPHERE").GetComponent<MeshRenderer>().material.mainTexture.wrapMode = TextureWrapMode.Clamp;
                     }
-                    else if (jpg.size > 5)
-                    {
-                        texture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/SkyBoxTexture.jpg").texture;
-                    }
-                    else { Debug.Log("There is no such a texture file named \"SkyBoxTexture.png\" or \"SkyBoxTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); }
-                    //if (GameObject.Find("Main Camera").GetComponent<Skybox>()) {
-                        RenderSettings.skybox = new Material(Shader.Find("SkyBox/6 Sided"));
-                        RenderSettings.skybox.SetTexture("+Z",texture);
-                        //GameObject.Find("Main Camera").GetComponent<Skybox>().material.mainTexture = texture;
-                       // GameObject.Find("Main Camera").GetComponent<Camera>().tar = texture;
-                   // }
-                  //  else
-                  //  {
-                  //      GameObject.Find("Main Camera").gameObject.AddComponent<Skybox>();
-                  //      GameObject.Find("Main Camera").GetComponent<Skybox>().material = new Material(Shader.Find("Diffuse"));
-                   //     GameObject.Find("Main Camera").GetComponent<Skybox>().material
-                  //  }
+                    catch
+                     { Debug.Log("There is no such a texture file named \"SkyBoxTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); yield break; }
+                    //GameObject.Find("Main Camera").GetComponent<Camera>().clearFlags = CameraClearFlags.Skybox;
                 }
             }
             catch(Exception e) { Debug.Log(e); }
-            //StartCoroutine(SkyBox());
+            StartCoroutine(SkyBox());
         }
 
         void Update()
@@ -668,13 +742,26 @@ namespace SkyAndCloud
                 }
                 if (isBoundairesAway)
                 {
-                    try { GameObject.Find("WORLD BOUNDARIES").transform.localScale = new Vector3(0, 0, 0); } catch { }
+                    try
+                    {
+                        GameObject.Find("WORLD BOUNDARIES").transform.localScale = new Vector3(0, 0, 0);
+                        isBoundairesAway = true;
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            GameObject.Find("WORLD BOUNDARIES LARGE").transform.localScale = new Vector3(0, 0, 0);
+                            isBoundairesAway = true;
+                        }
+                        catch { }
+                    }
                 }
                 if (isFogAway)
                 {
                     try { GameObject.Find("Fog Volume").transform.position = new Vector3(0, Mathf.Infinity, 0); } catch { }
                 }
-                try { GameObject.Find("FloorBig").transform.localScale = new Vector3(floorScale[0], floorScale[1], floorScale[2]); } catch { }
+                //try { GameObject.Find("FloorBig").transform.localScale = new Vector3(floorScale[0], floorScale[1], floorScale[2]); } catch { }
             }
             catch { }
             if (settingTempHasBeenChanged)
@@ -752,7 +839,7 @@ namespace SkyAndCloud
             {
                 if (!OkGo)
                 {
-                    //StartCoroutine(LoadBundle());
+                    StartCoroutine(LoadBundle());
                     return;
                 }
             }
@@ -765,6 +852,10 @@ namespace SkyAndCloud
             {
                 DetectedStartedSimulating = true;
                 ItIsNightSoEveryCloudShouldBeDeepDarkFantasy();
+            }
+            if (GameObject.Find("STAR SPHERE"))
+            {
+                GameObject.Find("STAR SPHERE").transform.eulerAngles += new Vector3(0, 0.001f, 0.001f);
             }
             if (!AddPiece.isSimulating) { DetectedStartedSimulating = false; }
             try
@@ -971,8 +1062,32 @@ namespace SkyAndCloud
                     isFogAway = bool.Parse(Settings[11]);
                     if (isFogAway)
                     {
-                        try { GameObject.Find("Fog Volume").transform.position = new Vector3(0, Mathf.Infinity, 0); } catch {
-                            try { GameObject.Find("Fog Volume Dark").transform.position = new Vector3(0, Mathf.Infinity, 0); } catch { }
+                        try
+                        {
+                            GameObject.Find("Fog Volume").transform.position = new Vector3(0, Mathf.Infinity, 0);
+                            GameObject.Find("Main Camera").GetComponent<ColorfulFog>().useCustomDepthTexture = true;
+                            isFogAway = true;
+                        }
+                        catch
+                        {
+                            try
+                            {
+                                GameObject.Find("Fog Volume Dark").transform.position = new Vector3(0, Mathf.Infinity, 0);
+                                GameObject.Find("Main Camera").GetComponent<ColorfulFog>().useCustomDepthTexture = true;
+                                GameObject.Find("Main Camera").GetComponent<ColorfulFog>().distanceFog = false;
+                                isFogAway = true;
+                            }
+                            catch
+                            {
+                                try
+                                {
+                                    GameObject.Find("FOG SPHERE").transform.position = new Vector3(0, Mathf.Infinity, 0);
+                                    GameObject.Find("Main Camera").GetComponent<ColorfulFog>().useCustomDepthTexture = true;
+                                    GameObject.Find("Main Camera").GetComponent<ColorfulFog>().distanceFog = false;
+                                    isFogAway = true;
+                                }
+                                catch {}
+                            }
                         }
                     }
 
@@ -996,7 +1111,18 @@ namespace SkyAndCloud
                     isBoundairesAway = bool.Parse(Settings[15]);
                     if (isBoundairesAway)
                     {
-                        try { GameObject.Find("WORLD BOUNDARIES").transform.localScale = new Vector3(0, 0, 0); } catch { }
+                        try
+                        {
+                            GameObject.Find("WORLD BOUNDARIES").transform.localScale = new Vector3(0, 0, 0);
+                        }
+                        catch
+                        {
+                            try
+                            {
+                                GameObject.Find("WORLD BOUNDARIES LARGE").transform.localScale = new Vector3(0, 0, 0);
+                            }
+                            catch {}
+                        }
                     }
                     IsNightMode = bool.Parse(Settings[16].Trim());
                     if (IsNightMode)
@@ -1009,7 +1135,11 @@ namespace SkyAndCloud
                         }
                         catch { }
                     }
-
+                    try
+                    {
+                        GameObject.Find("FloorGrid").transform.position += Vector3.down * 10;
+                    }
+                    catch { }
                     Debug.Log("Finished Loading All Settings!");
                 }
                 catch { Debug.Log("Your Setting Tempelate cannot be read!"); }
@@ -1027,6 +1157,28 @@ namespace SkyAndCloud
                 }, "Try load floating stones");//Try load Floating Stones*/
 
 
+        }
+        public static Texture2D LoadTextureDXT(byte[] ddsBytes, TextureFormat textureFormat)
+        {
+            if (textureFormat != TextureFormat.DXT1 && textureFormat != TextureFormat.DXT5)
+                throw new Exception("Invalid TextureFormat. Only DXT1 and DXT5 formats are supported by this method.");
+
+            byte ddsSizeCheck = ddsBytes[4];
+            if (ddsSizeCheck != 124)
+                throw new Exception("Invalid DDS DXTn texture. Unable to read");  //this header byte should be 124 for DDS image files
+
+            int height = ddsBytes[13] * 256 + ddsBytes[12];
+            int width = ddsBytes[17] * 256 + ddsBytes[16];
+
+            int DDS_HEADER_SIZE = 128;
+            byte[] dxtBytes = new byte[ddsBytes.Length - DDS_HEADER_SIZE];
+            Buffer.BlockCopy(ddsBytes, DDS_HEADER_SIZE, dxtBytes, 0, ddsBytes.Length - DDS_HEADER_SIZE);
+
+            Texture2D texture = new Texture2D(width, height, textureFormat, false);
+            texture.LoadRawTextureData(dxtBytes);
+            texture.Apply();
+
+            return (texture);
         }
     }
     /*
@@ -1058,10 +1210,10 @@ namespace SkyAndCloud
         {
             //Pre-Setting
             FireColor = new Color(0.9f,0.6f,0);
-            ShakeMax = 1.3f;
+            ShakeMax = 1.25f;
             ShakeMin = 0.9f;
             FireLightIntensity = 2f;
-            FireLightRange = 7f;
+            FireLightRange = 15f;
 
             float ScaleMag = Vector3.Magnitude(this.transform.localScale);
             FUcount = 0;
