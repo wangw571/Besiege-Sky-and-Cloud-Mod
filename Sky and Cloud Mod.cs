@@ -18,7 +18,7 @@ namespace SkyAndCloud
         public override string DisplayName { get { return "Cloud Mod"; } }
         public override string BesiegeVersion { get { return "v0.3"; } }
         public override string Author { get { return "覅是"; } }
-        public override Version Version { get { return new Version("0.88"); } }
+        public override Version Version { get { return new Version("0.89"); } }
         public override bool CanBeUnloaded { get { return true; } }
 
         public GameObject temp;
@@ -46,10 +46,10 @@ namespace SkyAndCloud
         private GameObject[] clouds = new GameObject[60];
         /*private GameObject floatingRock = new GameObject();
         private int floatingrocksCloneCount = 0;*/
-        private GameObject cloudTemp;
-        private GameObject godLightTemp;
-        private GameObject rainTemp;
-        private GameObject thunderCloudTemp;
+        public GameObject cloudTemp;
+        //private GameObject godLightTemp;
+        //private GameObject rainTemp;
+        //private GameObject thunderCloudTemp;
 
         public int cloudAmount = 60;
         public int cloudAmountTemp = 0;
@@ -82,19 +82,28 @@ namespace SkyAndCloud
 
         public bool resetCloudsNow = false;
         private int tempLevel;
-        private GameObject sunS = new GameObject();
-        private GameObject sun;
+        //private GameObject sunS = new GameObject();
+        //private GameObject sun;
         public GameObject[] shadow;
 
         public string settingTemp;
         public string[] Settings;
         public bool settingTempHasBeenChanged = false;
         private bool DetectedStartedSimulating = false;
-        private Flare finalFlare;
-        private object FlareIns;
-        private bool OkGo = false;
+        //private Flare finalFlare;
+        //private object FlareIns;
+        //private bool OkGo = false;
 
-        private IEnumerator LoadBundle()
+
+        public Color FlameLightColor = new Color(0.9f, 0.6f, 0);
+        public float FireLightIntensity = 2.5f;
+        public float FireLightRange = 30f;
+        public float Shakefrequency = 10f;
+        public float ShakeMax = 1.25f;
+        public float ShakeMin = 0.9f;
+
+
+        /*private IEnumerator LoadBundle()
         {
             WWW www = new WWW("File:///" + Application.dataPath + "/Mods/Resources/ManyFlares.assetbundle");
             yield return www;
@@ -107,19 +116,19 @@ namespace SkyAndCloud
             go.name = "GOOOO";
             DontDestroyOnLoad(go);
             OkGo = true;
-            /*foreach(UnityEngine.Object obj in asset.LoadAllAssets())
+            foreach(UnityEngine.Object obj in asset.LoadAllAssets())
             {
                 Instantiate(obj);
-            }     */
-            //asset.Unload(false);
-        }
+            }     
+            asset.Unload(false);
+        }*/
 
         void Start()
         {            
             //Application.LoadLevel (5);
             StartCoroutine(SkyBox());
 
-            Commands.RegisterHelpMessage("SimpleIOBlocks commands:\n	IOSpheres [bool]\n	IOPulse [bool]\n	IOTickGUI [bool]");
+            Commands.RegisterHelpMessage("CLOUDS!");
             Commands.RegisterCommand("ResetCloudsAmount", (args, notUses) =>
             {
                 if (args.Length < 1)
@@ -610,7 +619,7 @@ namespace SkyAndCloud
                 } catch {
                     try
                     {
-                        GameObject.Find("WORLD BOUNDARIES LARGE").transform.position = new Vector3(1, 1, 1);
+                        GameObject.Find("WORLD BOUNDARIES LARGE").transform.position = new Vector3(2.8f, 1, 2.3f);
                         isBoundairesAway = false;
                         settingTempHasBeenChanged = true;
                         return "The World Boundaries will be reset.";
@@ -659,36 +668,39 @@ namespace SkyAndCloud
 
             Commands.RegisterCommand("ApplyFloorTexture", (args, notUses) =>
             {
-                if(args[0] == null)
-                {
-                    return "Please give me your scale!";
-                }
-                try
-                {
-                    WWW png = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png");
-                    WWW jpg = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg");
-                    GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = null;
-                    //GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture.wrapMode = TextureWrapMode.Clamp;
-                    if (png.size > 5)
+                try {
+                    if (args[0] == null)
                     {
-                        try
-                        {
-                            GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture;
-                        }
-                        catch { }
+                        return "Please give me your scale!";
                     }
-                    else if (jpg.size > 5)
+                    try
                     {
-                        try
+                        WWW png = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png");
+                        WWW jpg = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg");
+                        GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = null;
+                        //GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture.wrapMode = TextureWrapMode.Clamp;
+                        if (png.size > 5)
                         {
-                            GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture;
+                            try
+                            {
+                                GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture;
+                            }
+                            catch { }
                         }
-                        catch { }
+                        else if (jpg.size > 5)
+                        {
+                            try
+                            {
+                                GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture;
+                            }
+                            catch { }
+                        }
+                        else { return ("There is no such a texture file named \"GroundTexture.png\" or \"GroundTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); }
+                        GameObject.Find("FloorBig").GetComponent<Renderer>().material.SetTextureScale("_MainTex", Vector2.one * 1 / float.Parse(args[0]));
                     }
-                    else { return("There is no such a texture file named \"GroundTexture.png\" or \"GroundTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); }
-                    GameObject.Find("FloorBig").GetComponent<Renderer>().material.SetTextureScale("_MainTex",Vector2.one * 1/float.Parse(args[0])); 
-                }
-                catch { }
+                    catch { }
+                    }
+                    catch { return "Something wrong happened!";}
 
                 return "Applied!";
 
@@ -761,7 +773,8 @@ namespace SkyAndCloud
                 {
                     try { GameObject.Find("Fog Volume").transform.position = new Vector3(0, Mathf.Infinity, 0); } catch { }
                 }
-                //try { GameObject.Find("FloorBig").transform.localScale = new Vector3(floorScale[0], floorScale[1], floorScale[2]); } catch { }
+
+                try { GameObject.Find("Main Camera").GetComponent<Camera>().farClipPlane = cameraDrawingRange; } catch { }
             }
             catch { }
             if (settingTempHasBeenChanged)
@@ -834,7 +847,7 @@ namespace SkyAndCloud
             //FrySomeFlare.name = "KillYA";
             //GameObject.Find("Directional light").GetComponent<LensFlare>().flare = 
                     Debug.Log("Loaded!");
-            }*/
+            }
             if (Input.GetKeyDown(KeyCode.F1))
             {
                 if (!OkGo)
@@ -842,7 +855,7 @@ namespace SkyAndCloud
                     StartCoroutine(LoadBundle());
                     return;
                 }
-            }
+            }*/
             
         }
         void FixedUpdate()
@@ -856,48 +869,23 @@ namespace SkyAndCloud
             if (GameObject.Find("STAR SPHERE"))
             {
                 GameObject.Find("STAR SPHERE").transform.eulerAngles += new Vector3(0, 0.001f, 0.001f);
+                GameObject.Find("STAR SPHERE").transform.localScale =  Vector3.one * (2068/1500) * cameraDrawingRange;
             }
             if (!AddPiece.isSimulating) { DetectedStartedSimulating = false; }
-            try
-            {
-                GameObject.Find("Directional light").GetComponent<Light>().shadows = LightShadows.Soft;
-                sun.transform.position = GameObject.Find("Directional light").transform.forward * -600 + GameObject.Find("Main Camera").transform.position;
-                //GameObject.Find("Directional light").transform.eulerAngles = new Vector3(GameObject.Find("Directional light").transform.eulerAngles.x, 120, GameObject.Find("Directional light").transform.eulerAngles.z);
-                
-                /*if (!GameObject.Find("Sun Sphere"))
-                {
-                    GameObject sunS = new GameObject();
-                    sunS = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    sunS.GetComponent<Rigidbody>().isKinematic = false;
-                    Destroy(sunS.GetComponent<Collider>());
-                    sunS.GetComponent<Renderer>().receiveShadows = false;
-                    sunS.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    sunS.name = "Sun Sphere";
-                    sunS.transform.localScale = new Vector3(200, 200, 200);
-                }
 
-                try
-                {
-                    sunS.transform.position = GameObject.Find("Directional light").transform.forward * -700 + GameObject.Find("3D Hud Cam").transform.position;
-                    Debug.Log("TRIED!");
-                    sun.transform.position = GameObject.Find("Directional light").transform.forward * -600 + GameObject.Find("3D Hud Cam").transform.position;
-                }
-                catch { }*/
-
-            }
-            catch {}
-            
                 if (tempLevel != Application.loadedLevel) {
                 try
                 {
-                   // GameObject.Find("Main Camera").GetComponent<Camera>().backgroundColor = Color.cyan;
                     tempLevel = Application.loadedLevel;
                     读取设定();
                 }
                 catch { }
             }
+            if (cloudTemp == null) {
+                cloudTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("CLoud"));
+                cloudTemp.SetActive(false);
 
-            if (cloudTemp == null) { cloudTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("CLoud")); cloudTemp.SetActive(false); }
+            }
              /*if (godLightTemp != null) { Debug.Log("RunningG"); godLightTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("GodRays")); godLightTemp.SetActive(false); Debug.Log("GL"); }
              if (rainTemp != null) { Debug.Log("RunningR"); rainTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("Rain Particles")); rainTemp.SetActive(false); Debug.Log("RP"); } 
              if (thunderCloudTemp != null) { Debug.Log("RunningT"); thunderCloudTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("THUNDER CLOUD")); thunderCloudTemp.SetActive(false); Debug.Log("TC"); } 
@@ -909,7 +897,11 @@ namespace SkyAndCloud
             if (cloudAmountTemp != cloudAmount) { resetCloudsNow = true; clouds[1] = null; cloudAmountTemp = cloudAmount; try { for (int k = cloudAmount; k < clouds.Length; k++) { Destroy(clouds[k].gameObject); Destroy(shadow[k].gameObject); } } catch { } }
             try
             {
-                floorScale = GameObject.Find("FloorBig").transform.localScale;
+                GameObject flo = GameObject.Find("FloorBig");
+                if (flo != null)
+                {
+                    floorScale = GameObject.Find("FloorBig").transform.localScale;
+                }
                 if (clouds[1] == null && cloudAmount > 1)
                 {
                     clouds = new GameObject[cloudAmount];
@@ -1005,10 +997,11 @@ namespace SkyAndCloud
             higherCloudsColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
             lowerCloudsColor = new Color(0.6f, 0.6f, 0.6f, 0.5f);
             resetCloudsNow = true;
+            
             foreach (ParticleSystemRenderer f in FindObjectsOfType<ParticleSystemRenderer>())
             {
                 try {
-                    if (f.GetComponent<ParticleSystemRenderer>().name.Contains("Fire"))
+                    if (f.GetComponent<ParticleSystemRenderer>().name.Contains("Fire") || f.GetComponent<ParticleSystemRenderer>().name.Contains("Flame"))
                     {
                         f.gameObject.AddComponent<ShakeLightingWholalalalalalallalala>();
                     }
@@ -1202,18 +1195,21 @@ namespace SkyAndCloud
         public Color FireColor;
         public Light ThisLight;
         public bool ShakeTheLight = true;
-        private bool TargetIsOnFire = false;
+        //private bool TargetIsOnFire = false;
         public float lastFUTime;
         public float FUcount = 0;
+        public CloudMod SettingsFrom;
 
         void Start ()
         {
+            SettingsFrom = GameObject.Find("Cloud Mod").GetComponent<CloudMod>();
             //Pre-Setting
-            FireColor = new Color(0.9f,0.6f,0);
-            ShakeMax = 1.25f;
-            ShakeMin = 0.9f;
-            FireLightIntensity = 2f;
-            FireLightRange = 15f;
+            FireColor = SettingsFrom.FlameLightColor;
+            ShakeMax = SettingsFrom.ShakeMax;
+            ShakeMin = SettingsFrom.ShakeMin;
+            FireLightIntensity = SettingsFrom.FireLightIntensity;
+            Shakefrequency = SettingsFrom.Shakefrequency;
+            FireLightRange = SettingsFrom.FireLightRange;
 
             float ScaleMag = Vector3.Magnitude(this.transform.localScale);
             FUcount = 0;
@@ -1224,6 +1220,9 @@ namespace SkyAndCloud
                 ThisLight.type = LightType.Point;
                 ThisLight.color = FireColor;
                 ThisLight.intensity = FireLightIntensity * ScaleMag;
+                ThisLight.renderMode = LightRenderMode.ForcePixel;
+                ThisLight.shadowBias = 15;
+                ThisLight.shadowStrength = 0.5f;
                 ThisLight.range = FireLightRange * ScaleMag;
                 ThisLight.enabled = false;
                 lastFUTime = this.GetComponent<ParticleSystem>().time;
@@ -1236,6 +1235,13 @@ namespace SkyAndCloud
 
         void FixedUpdate()//弃用方案
         {
+            FireColor = SettingsFrom.FlameLightColor;
+            ShakeMax = SettingsFrom.ShakeMax;
+            ShakeMin = SettingsFrom.ShakeMin;
+            FireLightIntensity = SettingsFrom.FireLightIntensity;
+            Shakefrequency = SettingsFrom.Shakefrequency;
+            FireLightRange = SettingsFrom.FireLightRange;
+
             ++FUcount;
             float ScaleMag = Vector3.Magnitude(this.transform.localScale);
             if (!AddPiece.isSimulating) Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
@@ -1259,7 +1265,9 @@ namespace SkyAndCloud
                 ThisLight.intensity = FireLightIntensity /* ScaleMag */;
                 ThisLight.range = FireLightRange /* ScaleMag */ * (UnityEngine.Random.value * (ShakeMax - ShakeMin) + ShakeMin);
                 ThisLight.color = FireColor;
+                ShakeTheLight = false;
             }
+            if (FUcount % Shakefrequency == 0) ShakeTheLight = true;
         }
         }
         //void FixedUpdate()
