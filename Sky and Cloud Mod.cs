@@ -18,7 +18,7 @@ namespace SkyAndCloud
         public override string DisplayName { get { return "Cloud Mod"; } }
         public override string BesiegeVersion { get { return "v0.32"; } }
         public override string Author { get { return "覅是"; } }
-        public override Version Version { get { return new Version("0.891"); } }
+        public override Version Version { get { return new Version("0.89.1"); } }
         public override bool CanBeUnloaded { get { return true; } }
 
         public GameObject temp;
@@ -43,7 +43,7 @@ namespace SkyAndCloud
     public class CloudMod : MonoBehaviour
     {
 
-        private GameObject[] clouds = new GameObject[60];
+        private List<GameObject> clouds = new List<GameObject>(60);
         /*private GameObject floatingRock = new GameObject();
         private int floatingrocksCloneCount = 0;*/
         public GameObject cloudTemp;
@@ -122,7 +122,7 @@ namespace SkyAndCloud
                 Instantiate(obj);
             }     
             asset.Unload(false);
-        }*/
+        }*/ 
 
         void Start()
         {            
@@ -662,37 +662,9 @@ namespace SkyAndCloud
 
             Commands.RegisterCommand("On/OffExtraCannonEffect", (args, notUses) =>
             {
-
-                try
-                {
-                    if (!IsNightMode)
-                    {
-                        IsNightMode = true;
-                        GameObject.Find("Main Camera").GetComponent<Camera>().backgroundColor = new Color(0.1f, 0.1f, 0.1f);
-                        GameObject.Find("Directional light").GetComponent<Light>().intensity = 0f;
-                        try
-                        {
-                            GameObject.Find("Directional light").GetComponent<LensFlare>().brightness = 10;
-                            GameObject.Find("Directional light").GetComponent<LensFlare>().color = Color.white;
-                            GameObject.Find("Directional light").GetComponent<LensFlare>().enabled = true;
-                            GameObject.Find("Directional light").GetComponent<LensFlare>().fadeSpeed = 1;
-                        }
-                        catch { }
-                        ItIsNightSoEveryCloudShouldBeDeepDarkFantasy();
-                        保存设定();
-                        return "Yes! Super cool effect!";
-                    }
-                    else
-                    {
-                       
-                        保存设定();
-                        return "Yes! Normal Cannons!";
-                    }
-                }
-                catch { return "The Main Camera does not exists!"; }
-
-            }, "Turn on/off extra cannon effects");//Cannon
-
+                ExtraCannonSmokeEffect = !ExtraCannonSmokeEffect;
+                return "Extra Cannon Effect is now" + ExtraCannonSmokeEffect;
+            }, "Add Extra Smoke and light to cannons");//Cannon
         }
 
 
@@ -725,7 +697,7 @@ namespace SkyAndCloud
 
         void Update()
         {
-            if (ExtraCannonSmokeEffect)
+            if (ExtraCannonSmokeEffect && UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "TITLE SCREEN")
             {
                 炮火添加器();
             }
@@ -810,61 +782,68 @@ namespace SkyAndCloud
             }
             if (!StatMaster.isSimulating) { DetectedStartedSimulating = false; }
 
-                if (tempLevelName != UnityEngine.SceneManagement.SceneManager.GetActiveScene().name) {
-                try
-                {
+            resetCloudsNow = cloudAmountTemp != cloudAmount;
+                if (tempLevelName != UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)
+            {
                     tempLevelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
                     读取设定();
+                    resetCloudsNow = true;
                 }
-                catch { }
-            }
             if (cloudTemp == null) {
-                cloudTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("CLoud"));
+                cloudTemp = Instantiate(GameObject.Find("CLoud"));
                 cloudTemp.SetActive(false);
-
+                DontDestroyOnLoad(cloudTemp);
             }
-             /*if (godLightTemp != null) { Debug.Log("RunningG"); godLightTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("GodRays")); godLightTemp.SetActive(false); Debug.Log("GL"); }
-             if (rainTemp != null) { Debug.Log("RunningR"); rainTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("Rain Particles")); rainTemp.SetActive(false); Debug.Log("RP"); } 
-             if (thunderCloudTemp != null) { Debug.Log("RunningT"); thunderCloudTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("THUNDER CLOUD")); thunderCloudTemp.SetActive(false); Debug.Log("TC"); } 
-            *///DontDestroyOnLoad(cloudTemp);
-            /*DontDestroyOnLoad(godLightTemp);
-            DontDestroyOnLoad(rainTemp);
-            DontDestroyOnLoad(thunderCloudTemp);*/
+            /*if (godLightTemp != null) { Debug.Log("RunningG"); godLightTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("GodRays")); godLightTemp.SetActive(false); Debug.Log("GL"); }
+            if (rainTemp != null) { Debug.Log("RunningR"); rainTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("Rain Particles")); rainTemp.SetActive(false); Debug.Log("RP"); } 
+            if (thunderCloudTemp != null) { Debug.Log("RunningT"); thunderCloudTemp = (GameObject)UnityEngine.Object.Instantiate(GameObject.Find("THUNDER CLOUD")); thunderCloudTemp.SetActive(false); Debug.Log("TC"); } 
+           *///DontDestroyOnLoad(cloudTemp);
+             /*DontDestroyOnLoad(godLightTemp);
+             DontDestroyOnLoad(rainTemp);
+             DontDestroyOnLoad(thunderCloudTemp);*/
 
-            if (cloudAmountTemp != cloudAmount) { resetCloudsNow = true; clouds[1] = null; cloudAmountTemp = cloudAmount; try { for (int k = cloudAmount; k < clouds.Length; k++) { Destroy(clouds[k].gameObject); Destroy(shadow[k].gameObject); } } catch { } }
-            try
+            if (resetCloudsNow)
             {
-                GameObject flo = GameObject.Find("FloorBig");
+                resetCloudsNow = false;
+                cloudAmountTemp = cloudAmount;
+                foreach (Transform cloud in this.transform)
+                { if (cloud.gameObject != cloudTemp && cloud.name.Equals("CLoud(Clone)(Clone)")) {  } }
+                clouds.Clear();
+                clouds.Capacity = cloudAmount;
+            }
+
+            GameObject flo = GameObject.Find("FloorBig");
                 if (flo != null)
                 {
                     floorScale = GameObject.Find("FloorBig").transform.localScale;
                 }
-                if (clouds[1] == null && cloudAmount > 1)
+                //Debug.Log("Here");
+                if (clouds.Count == 0 && cloudAmount > 0)
                 {
-                    clouds = new GameObject[cloudAmount];
-                    shadow = new GameObject[cloudAmount];
-                    for (int i = 0; i <= clouds.Length; i++)
+                    clouds.Clear();
+                //shadow = new GameObject[cloudAmount];
+                    for (int i = 0; i <= cloudAmount - 1; ++i)
                     {
                         
                         //GameObject.DontDestroyOnLoad(clouds[i]);
-                        if (i < (int)clouds.Length / 3)
+                        if (i < (int)cloudAmount / 3)
                         {
-                            clouds[i] = (GameObject)UnityEngine.Object.Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(higherCloudsMinHeight, higherCloudsMaxHeight), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)), new Quaternion(0, 0, 0, 0));
-                            clouds[i].GetComponent<ParticleSystem>().startColor = higherCloudsColor;
-                            clouds[i].layer = 12;
+                            clouds.Add((GameObject)Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(higherCloudsMinHeight, higherCloudsMaxHeight), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)), new Quaternion(0, 0, 0, 0)));
+                            clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startColor = higherCloudsColor;
+                            clouds[clouds.Count - 1].layer = 12;
                         }
                         else
                         {
-                            clouds[i] = (GameObject)UnityEngine.Object.Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(lowerCloudsMinHeight, lowerCloudsMaxHeight), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)), new Quaternion(0, 0, 0, 0));
-                            clouds[i].GetComponent<ParticleSystem>().startColor = lowerCloudsColor;
-                            clouds[i].layer = 12;
+                            clouds.Add((GameObject)Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(lowerCloudsMinHeight, lowerCloudsMaxHeight), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)), new Quaternion(0, 0, 0, 0)));
+                            clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startColor = lowerCloudsColor;
+                            clouds[clouds.Count - 1].layer = 12;
                         }
-                        clouds[i].SetActive(true);
-                        clouds[i].transform.SetParent(GameObject.Find("Cloud Mod").transform);
-                        clouds[i].GetComponent<ParticleSystem>().startSize = 30;
-                        clouds[i].GetComponent<ParticleSystem>().startLifetime = 5;
-                        clouds[i].transform.localScale = new Vector3(15, 15, 15);
-                        clouds[i].GetComponent<ParticleSystem>().maxParticles = (int)clouds[i].transform.position.y;
+                        clouds[clouds.Count - 1].SetActive(true);
+                        clouds[clouds.Count - 1].transform.SetParent(GameObject.Find("Cloud Mod").transform);
+                        clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startSize = 30;
+                        clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startLifetime = 5;
+                        clouds[clouds.Count - 1].transform.localScale = new Vector3(15, 15, 15);
+                        clouds[clouds.Count - 1].GetComponent<ParticleSystem>().maxParticles = (int)clouds[i].transform.position.y;
                         /*shadow[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                         Destroy(shadow[i].GetComponent<Collider>());//.transform.parent = shadow[i].transform;
                         shadow[i].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly; 
@@ -879,17 +858,13 @@ namespace SkyAndCloud
                             mtrl.color= new Color(1, 1, 1, 0.3f);
                         }
                         Destroy(shadow[i].GetComponent<Renderer>().material.mainTexture);*/
-                        clouds[i].transform.LookAt(new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)));
+                        clouds[clouds.Count - 1].transform.LookAt(new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)));
                         try
                         {
                           //  clouds[i].GetComponent<ParticleRenderer>().receiveShadows = true;
-                            clouds[i].GetComponent<ParticleSystemRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                            clouds[clouds.Count - 1].GetComponent<ParticleSystemRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                         }
                         catch { Debug.Log("Shadow failed!"); }
-
-
-
-
                     }
                 }
                 else
@@ -917,18 +892,11 @@ namespace SkyAndCloud
 
                     }
                 }
-                if (resetCloudsNow)
-                {
-                    resetCloudsNow = false;
-                    foreach (GameObject cloud in Resources.FindObjectsOfTypeAll(typeof(GameObject))) { if (cloud != cloudTemp && cloud.name.Equals("CLoud(Clone)(Clone)")) { Destroy(cloud); } }
-                    clouds = new GameObject[cloudAmount];
-                }
+                
                 //foreach (GameObject oneShadow in shadow) { if (isShadowOff) { oneShadow.transform.localScale = new Vector3(0, 0, 0); } else { oneShadow.transform.localScale = new Vector3(4, 2.5f, 2.5f); } }
 
 
             }
-            catch { }
-        }
         void ItIsNightSoEveryCloudShouldBeDeepDarkFantasy()
         {
             higherCloudsColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
@@ -1079,7 +1047,7 @@ namespace SkyAndCloud
             //{
             //    File.Create(Application.dataPath + "/Mods/Cloud Mod Setting Tempelate.txt");
             //}//读取设定
-            if (!Configuration.DoesKeyExist("Cloud Amount")) return;
+            if (!Configuration.DoesKeyExist("Cloud Amount")) 保存设定();
             cloudAmount = Configuration.GetInt("Cloud Amount", cloudAmount);
             cloudSizeScale = Configuration.GetFloat("Cloud Size Scale", cloudSizeScale);
             higherCloudsMaxHeight = Configuration.GetFloat("Higher Clouds Spawn Range Max", higherCloudsMaxHeight);
@@ -1166,7 +1134,6 @@ namespace SkyAndCloud
         }
         void 保存设定()
         {
-                保存设定();
                 Configuration.SetInt("Cloud Amount", cloudAmount);
                 Configuration.SetFloat("Cloud Size Scale", cloudSizeScale);
                 Configuration.SetFloat("Higher Clouds Spawn Range Max", higherCloudsMaxHeight);
@@ -1257,14 +1224,29 @@ namespace SkyAndCloud
         }
         internal void 炮火添加器()
         {
-            foreach (CanonBlock CB in FindObjectsOfType<CanonBlock>())
+            if (StatMaster.isSimulating)
             {
-                if(! CB.gameObject.transform.Find("Particle System").gameObject.GetComponent<炮火之光>())
-                try
+                foreach (CanonBlock CB in Machine.Active().SimulationMachine.transform.GetComponentsInChildren<CanonBlock>())
                 {
-                    CB.gameObject.transform.Find("Particle System").gameObject.AddComponent<炮火之光>();
+                    if (!CB.gameObject.transform.Find("Particle System").gameObject.GetComponent<炮火之光>())
+                        try
+                        {
+                            CB.gameObject.transform.Find("Particle System").gameObject.AddComponent<炮火之光>();
+                        }
+                        catch { }
                 }
-                catch { }
+            }
+            else
+            {
+                foreach (CanonBlock CB in Machine.Active().BuildingMachine.transform.GetComponentsInChildren<CanonBlock>())
+                {
+                    if (!CB.gameObject.transform.Find("Particle System").gameObject.GetComponent<炮火之光>())
+                        try
+                        {
+                            CB.gameObject.transform.Find("Particle System").gameObject.AddComponent<炮火之光>();
+                        }
+                        catch { }
+                }
             }
         }
         public static Texture2D LoadTextureDXT(byte[] ddsBytes, TextureFormat textureFormat)
@@ -1421,7 +1403,7 @@ namespace SkyAndCloud
                 ThisLight.shadowStrength = 0.5f;
                 ThisLight.range = FireLightRange;
                 ThisLight.enabled = false;
-                DontDestroyOnLoad(ThisLight);
+                //DontDestroyOnLoad(ThisLight);
                 lastFUTime = this.GetComponent<ParticleSystem>().time;
             }
             else 
@@ -1446,12 +1428,12 @@ namespace SkyAndCloud
                 ThisLight.transform.localPosition -= Vector3.up;
                 ThisLight.color = FireColor;
                 ThisLight.intensity = FireLightIntensity;
-                ThisLight.renderMode = LightRenderMode.ForcePixel;
+                ThisLight.renderMode = LightRenderMode.Auto;
                 ThisLight.shadowBias = 15;
                 ThisLight.shadowStrength = 0.5f;
                 ThisLight.range = FireLightRange;
                 ThisLight.enabled = false;
-                DontDestroyOnLoad(ThisLight);
+                //DontDestroyOnLoad(ThisLight);
                 lastFUTime = this.GetComponent<ParticleSystem>().time;
             }
             if (!StatMaster.isSimulating) Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
@@ -1459,10 +1441,10 @@ namespace SkyAndCloud
             ParticleSystem PS = this.GetComponent<ParticleSystem>();
             PS.maxParticles = (int)Mathf.Log(炮力 * 10, 校准参数) * 1000;
             PS.startLifetime = Mathf.Log(炮力 * 10, 30) * 1.27f;
-            PS.emissionRate = Mathf.Log(炮力 * 10, 校准参数) * 141f;
+            PS.emissionRate = (int)(Math.Log(炮力 * 10, 校准参数) * 141);
             PS.startSpeed = Mathf.Log(炮力*10, 校准参数) * 1.27f; 
             
-            if (this.GetComponent<ParticleSystem>().IsAlive())
+            if (this.GetComponent<ParticleSystem>().IsAlive()) 
             {
                 if (this.GetComponent<ParticleSystem>().time == lastFUTime)
                 {
