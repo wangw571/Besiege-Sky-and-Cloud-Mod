@@ -18,7 +18,7 @@ namespace SkyAndCloud
         public override string DisplayName { get { return "Cloud Mod"; } }
         public override string BesiegeVersion { get { return "v0.32"; } }
         public override string Author { get { return "覅是"; } }
-        public override Version Version { get { return new Version("0.89.1"); } }
+        public override Version Version { get { return new Version("0.89.2"); } }
         public override bool CanBeUnloaded { get { return true; } }
 
         public GameObject temp;
@@ -27,8 +27,6 @@ namespace SkyAndCloud
 
         public override void OnLoad()
         {
-
-
             temp = new GameObject();
             temp.name = "Cloud Mod";
             temp.AddComponent<CloudMod>();
@@ -545,27 +543,65 @@ namespace SkyAndCloud
                         保存设定();
                         return "The World Boundaries will be moved away";
                     }
-                    catch { return "The World Boundaries does not exist!"; }
+                    catch
+                    {
+                        try
+                        {
+                            GameObject.Find("WORLD BOUNDARIES_LARGE").transform.localScale = new Vector3(0, 0, 0);
+                            isBoundairesAway = true;
+                            保存设定();
+                            return "The World Boundaries will be moved away";
+                        }
+                        catch {
+                            try
+                            {
+                                GameObject.Find("WORLD BOUNDARIES_LARGE (1)").transform.localScale = new Vector3(0, 0, 0);
+                                isBoundairesAway = true;
+                                保存设定();
+                                return "The World Boundaries will be moved away";
+                            }
+                            catch { return "The World Boundaries does not exist!"; }
+                        }
+                    }
                 }
 
             }, "Move the World Boundaries away");//Clean World Boundaries
 
             Commands.RegisterCommand("ResetWorldBoundaries", (args, notUses) =>
             {
-
+                string tip = "The World Boundaries will be reset.";
                 try { GameObject.Find("WORLD BOUNDARIES").transform.position = new Vector3(1, 1, 1);
                     isBoundairesAway = false;
                     保存设定();
-                    return "The World Boundaries will be reset.";
+                    return tip;
                 } catch {
                     try
                     {
                         GameObject.Find("WORLD BOUNDARIES LARGE").transform.position = new Vector3(2.8f, 1, 2.3f);
                         isBoundairesAway = false;
                         保存设定();
-                        return "The World Boundaries will be reset.";
+                        return tip;
                     }
-                    catch { return "The World Boundaries does not exist!"; }
+                    catch
+                    {
+                        try
+                        {
+                            GameObject.Find("WORLD BOUNDARIES_LARGE").transform.localScale = new Vector3(5.6f, 1, 5.6f);
+                            isBoundairesAway = false;
+                            保存设定();
+                            return tip;
+                        }
+                        catch {
+                            try
+                            {
+                                GameObject.Find("WORLD BOUNDARIES_LARGE (1)").transform.localScale = new Vector3(3, 0, 3);
+                                isBoundairesAway = false;
+                                保存设定();
+                                return tip;
+                            }
+                            catch { return "The World Boundaries does not exist!"; }
+                        }
+                    }
                 }
 
             }, "Put the World Boundaries back");//Reset World Boundaries
@@ -621,11 +657,19 @@ namespace SkyAndCloud
 
             Commands.RegisterCommand("ApplyFloorTexture", (args, notUses) =>
             {
-                try {
-                    if (args[0] == null)
-                    {
-                        return "Please give me your scale!";
-                    }
+                float sizeScale = 1;
+                try
+                {
+                    sizeScale = float.Parse(args[0]);
+
+                }
+                catch
+                {
+                    Debug.Log("Please give me your scale! Or I will defautly define it as 1.");
+                    sizeScale = 1;
+                }
+                try
+                {
                     try
                     {
                         WWW png = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png");
@@ -649,11 +693,11 @@ namespace SkyAndCloud
                             catch { }
                         }
                         else { return ("There is no such a texture file named \"GroundTexture.png\" or \"GroundTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); }
-                        GameObject.Find("FloorBig").GetComponent<Renderer>().material.SetTextureScale("_MainTex", Vector2.one * 1 / float.Parse(args[0]));
+                        GameObject.Find("FloorBig").GetComponent<Renderer>().material.SetTextureScale("_MainTex", Vector2.one * 1 / sizeScale);
                     }
                     catch { }
-                    }
-                    catch { return "Something wrong happened!";}
+                }
+                catch { return "Something wrong happened! Please make sure that the legal floor (not level 30 floor or well floor) exists!"; }
 
                 return "Applied!";
 
@@ -806,8 +850,8 @@ namespace SkyAndCloud
             {
                 resetCloudsNow = false;
                 cloudAmountTemp = cloudAmount;
-                foreach (Transform cloud in this.transform)
-                { if (cloud.gameObject != cloudTemp && cloud.name.Equals("CLoud(Clone)(Clone)")) {  } }
+                //foreach (Transform cloud in this.transform)
+                //{ if (cloud.gameObject != cloudTemp && cloud.name.Equals("CLoud(Clone)(Clone)")) {  } }
                 clouds.Clear();
                 clouds.Capacity = cloudAmount;
             }
@@ -1085,7 +1129,21 @@ namespace SkyAndCloud
                     {
                         GameObject.Find("WORLD BOUNDARIES LARGE").transform.localScale = new Vector3(0, 0, 0);
                     }
-                    catch { }
+                    catch
+                    {
+                        try
+                        {
+                            GameObject.Find("WORLD BOUNDARIES_LARGE").transform.localScale = new Vector3(0, 0, 0);
+                        }
+                        catch
+                        {
+                            try
+                            {
+                                GameObject.Find("WORLD BOUNDARIES_LARGE (1)").transform.localScale = new Vector3(0, 0, 0);
+                            }
+                            catch {  }
+                        }
+                    }
                 }
             }
             IsNightMode = Configuration.GetBool("Is Night mode on", IsNightMode);
