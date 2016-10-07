@@ -16,9 +16,9 @@ namespace SkyAndCloud
     {
         public override string Name { get { return "Cloud_Mod"; } }
         public override string DisplayName { get { return "Cloud Mod"; } }
-        public override string BesiegeVersion { get { return "v0.32"; } }
+        public override string BesiegeVersion { get { return "v0.35"; } }
         public override string Author { get { return "覅是"; } }
-        public override Version Version { get { return new Version("0.89.2"); } }
+        public override Version Version { get { return new Version("0.89.5"); } }
         public override bool CanBeUnloaded { get { return true; } }
 
         public GameObject temp;
@@ -363,7 +363,7 @@ namespace SkyAndCloud
 
             Commands.RegisterCommand("ResetFloorSizeScale", (args, notUses) =>
             {
-                if (args.Length < 1)
+                if (args.Length < 2)
                 {
                     return "ERROR!";
                 }
@@ -670,17 +670,20 @@ namespace SkyAndCloud
                 }
                 try
                 {
+                    GameObject FloorBig = GameObject.Find("FloorBig");
+                    GameObject FloorGrid = GameObject.Find("FloorGrid");
+                    Renderer FBRenderer = FloorBig.GetComponent<Renderer>();
                     try
                     {
                         WWW png = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png");
                         WWW jpg = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg");
-                        GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = null;
+                        FBRenderer.material = new Material(Shader.Find("Diffuse"));
                         //GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture.wrapMode = TextureWrapMode.Clamp;
                         if (png.size > 5)
                         {
                             try
                             {
-                                GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture;
+                                FBRenderer.material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture;
                             }
                             catch { }
                         }
@@ -688,12 +691,13 @@ namespace SkyAndCloud
                         {
                             try
                             {
-                                GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture;
+                                FBRenderer.material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture;
                             }
                             catch { }
                         }
                         else { return ("There is no such a texture file named \"GroundTexture.png\" or \"GroundTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); }
-                        GameObject.Find("FloorBig").GetComponent<Renderer>().material.SetTextureScale("_MainTex", Vector2.one * 1 / sizeScale);
+                        FBRenderer.material.SetTextureScale("_MainTex", Vector2.one * 1 / sizeScale);
+                        FloorGrid.transform.position = new Vector3(0, -15, 0);
                     }
                     catch { }
                 }
@@ -704,9 +708,62 @@ namespace SkyAndCloud
 
             }, "Set the floor texture");//FloorTexture
 
+            Commands.RegisterCommand("ApplyFloorTexture2", (args, notUses) =>
+            {
+                float sizeScale = 1;
+                try
+                {
+                    sizeScale = float.Parse(args[0]);
+
+                }
+                catch
+                {
+                    Debug.Log("Please give me your scale! Or I will defautly define it as 1.");
+                    sizeScale = 1;
+                }
+                try
+                {
+                    GameObject FloorGrid = GameObject.Find("FloorGrid");
+                    Renderer FGRenderer = FloorGrid.GetComponent<Renderer>();
+                    try
+                    {
+                        WWW png = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png");
+                        WWW jpg = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg");
+                        FGRenderer.material = new Material(Shader.Find("Diffuse"));
+                        //GameObject.Find("FloorBig").GetComponent<Renderer>().material.mainTexture.wrapMode = TextureWrapMode.Clamp;
+                        if (png.size > 5)
+                        {
+                            try
+                            {
+                                FGRenderer.material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.png").texture;
+                            }
+                            catch { }
+                        }
+                        else if (jpg.size > 5)
+                        {
+                            try
+                            {
+                                FGRenderer.material.mainTexture = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/GroundTexture.jpg").texture;
+                            }
+                            catch { }
+                        }
+                        else { return ("There is no such a texture file named \"GroundTexture.png\" or \"GroundTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); }
+                        FGRenderer.material.SetTextureScale("_MainTex", Vector2.one * 1 / sizeScale);
+                        FloorGrid.transform.position = new Vector3(0, -5, 0);
+                    }
+                    catch { }
+                }
+                catch { return "Something wrong happened! Please make sure that the legal floor (not level 30 floor or well floor) exists!"; }
+
+                return "Applied!";
+
+
+            }, "Set the floor texture in a different way");//FloorTextureD
+
             Commands.RegisterCommand("On/OffExtraCannonEffect", (args, notUses) =>
             {
                 ExtraCannonSmokeEffect = !ExtraCannonSmokeEffect;
+                保存设定();
                 return "Extra Cannon Effect is now" + ExtraCannonSmokeEffect;
             }, "Add Extra Smoke and light to cannons");//Cannon
         }
@@ -772,7 +829,23 @@ namespace SkyAndCloud
                             GameObject.Find("WORLD BOUNDARIES LARGE").transform.localScale = new Vector3(0, 0, 0);
                             isBoundairesAway = true;
                         }
-                        catch { }
+                        catch
+                        {
+                            try
+                            {
+                                GameObject.Find("WORLD BOUNDARIES_LARGE").transform.localScale = new Vector3(0, 0, 0);
+                                isBoundairesAway = true;
+                            }
+                            catch
+                            {
+                                try
+                                {
+                                    GameObject.Find("WORLD BOUNDARIES_LARGE (1)").transform.localScale = new Vector3(0, 0, 0);
+                                    isBoundairesAway = true;
+                                }
+                                catch {}
+                            }
+                        }
                     }
                 }
                 if (isFogAway)
@@ -1171,11 +1244,11 @@ namespace SkyAndCloud
             cloudSpeed[1] = float.Parse(CloudVelocityString.Split(',')[1]);
 
 
-            try
+            /*try
             {
                 GameObject.Find("FloorGrid").transform.position += Vector3.down * 10;
             }
-            catch { }
+            catch { }*/
             ExtraCannonSmokeEffect = Configuration.GetBool("Is Extra Cannon Effect on", ExtraCannonSmokeEffect);
             /*    Commands.RegisterCommand("TryFloatingStones", (args, notUses) =>
                 {
@@ -1184,11 +1257,11 @@ namespace SkyAndCloud
 
                 }, "Try load floating stones");//Try load Floating Stones*/
 
-            try
+            /*try
             {
                 GameObject.Find("FloorGrid").transform.position += Vector3.down * 10;
             }
-            catch { }
+            catch { }*/
         }
         void 保存设定()
         {
@@ -1280,7 +1353,7 @@ namespace SkyAndCloud
                 }
             }
         }
-        internal void 炮火添加器()
+        void 炮火添加器()
         {
             if (StatMaster.isSimulating)
             {
@@ -1291,7 +1364,8 @@ namespace SkyAndCloud
                         {
                             CB.gameObject.transform.Find("Particle System").gameObject.AddComponent<炮火之光>();
                         }
-                        catch { }
+                        catch {
+                        }
                 }
             }
             else
@@ -1303,7 +1377,9 @@ namespace SkyAndCloud
                         {
                             CB.gameObject.transform.Find("Particle System").gameObject.AddComponent<炮火之光>();
                         }
-                        catch { }
+                        catch
+                        {
+                        }
                 }
             }
         }
@@ -1475,7 +1551,6 @@ namespace SkyAndCloud
             FireColor = SettingsFrom.FlameLightColor;
             FireLightIntensity = 8 * (0.15f-GetComponent<ParticleSystem>().time)/0.15f;
             FireLightRange = SettingsFrom.FireLightRange * GetComponentInParent<BlockBehaviour>().Sliders[0].Value /10;
-
             ++FUcount;
             try {
                 ThisLight.intensity = FireLightIntensity * GetComponentInParent<BlockBehaviour>().Sliders[0].Value/10;
@@ -1495,7 +1570,7 @@ namespace SkyAndCloud
                 lastFUTime = this.GetComponent<ParticleSystem>().time;
             }
             if (!StatMaster.isSimulating) Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
-            float 炮力 = this.GetComponentInParent<BlockBehaviour>().Sliders[0].Value;
+            float 炮力 = GetComponentInParent<BlockBehaviour>().Sliders[0].Value;
             ParticleSystem PS = this.GetComponent<ParticleSystem>();
             PS.maxParticles = (int)Mathf.Log(炮力 * 10, 校准参数) * 1000;
             PS.startLifetime = Mathf.Log(炮力 * 10, 30) * 1.27f;
@@ -1511,7 +1586,6 @@ namespace SkyAndCloud
                 else
                 {
                     ThisLight.enabled = true;
-                    
                 }
                 lastFUTime = this.GetComponent<ParticleSystem>().time;
             }
