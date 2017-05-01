@@ -16,9 +16,9 @@ namespace SkyAndCloud
     {
         public override string Name { get { return "Cloud_Mod"; } }
         public override string DisplayName { get { return "Cloud Mod"; } }
-        public override string BesiegeVersion { get { return "v0.35"; } }
+        public override string BesiegeVersion { get { return "v0.45"; } }
         public override string Author { get { return "覅是"; } }
-        public override Version Version { get { return new Version("0.89.5"); } }
+        public override Version Version { get { return new Version("0.9"); } }
         public override bool CanBeUnloaded { get { return true; } }
 
         public GameObject temp;
@@ -69,11 +69,13 @@ namespace SkyAndCloud
 
         public bool isFogAway = false;
 
-        public Vector3 floorScale = new Vector3(911,10,900);
+        public Vector3 floorScale = new Vector3(911, 10, 900);
 
         public float CameraFarClip = 1500;
 
         public bool isShadowOff = false;
+
+        public bool isExtendingShadow = false;
 
         public bool isBoundairesAway = false;
         public bool IsNightMode = false;
@@ -120,10 +122,10 @@ namespace SkyAndCloud
                 Instantiate(obj);
             }     
             asset.Unload(false);
-        }*/ 
+        }*/
 
         void Start()
-        {            
+        {
             //Application.LoadLevel (5);
             StartCoroutine(SkyBox());
 
@@ -406,7 +408,8 @@ namespace SkyAndCloud
             Commands.RegisterCommand("TurnOn/OffCloudShadows", (args, notUses) =>
             {
 
-                try {
+                try
+                {
                     if (!isShadowOff)
                     {
                         foreach (GameObject shadowMaker in shadow) { shadowMaker.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; }
@@ -424,9 +427,36 @@ namespace SkyAndCloud
                         return "The shadow has been turned on";
                     }
                     else { return "Nothing Can be turn off/on"; }
-                } catch { return "The shadows does not exist!"; }
+                }
+                catch { return "The shadows does not exist!"; }
 
             }, "Turn on/off your clouds' shadows");//Shadow
+
+            Commands.RegisterCommand("FurthurShadowDistance", (args, notUses) =>
+            {
+
+                try
+                {
+                    if (!isExtendingShadow)
+                    {
+                        ShadowDistSetter();
+                        isExtendingShadow = true;
+                        保存设定();
+                        return "The shadow drawing distance has been extended to the camera far clip.";
+
+                    }
+
+                    else if (isExtendingShadow)
+                    {
+                        isExtendingShadow = false;
+                        保存设定();
+                        return "Restart the game in order to make it effective.";
+                    }
+                    else { return "Wrong!"; }
+                }
+                catch { return "Wrong!"; }
+
+            }, "Set if the shadow drawing distance is extended. ");//ShadowDist
 
             /* Commands.RegisterCommand("AddOneFloatingRock", (args, notUses) =>
             {
@@ -531,11 +561,15 @@ namespace SkyAndCloud
             Commands.RegisterCommand("NoWorldBoundaries", (args, notUses) =>
             {
 
-                try { GameObject.Find("WORLD BOUNDARIES").transform.localScale = new Vector3(0, 0, 0);
+                try
+                {
+                    GameObject.Find("WORLD BOUNDARIES").transform.localScale = new Vector3(0, 0, 0);
                     isBoundairesAway = true;
                     保存设定();
                     return "The World Boundaries will be moved away";
-                } catch {
+                }
+                catch
+                {
                     try
                     {
                         GameObject.Find("WORLD BOUNDARIES LARGE").transform.localScale = new Vector3(0, 0, 0);
@@ -552,7 +586,8 @@ namespace SkyAndCloud
                             保存设定();
                             return "The World Boundaries will be moved away";
                         }
-                        catch {
+                        catch
+                        {
                             try
                             {
                                 GameObject.Find("WORLD BOUNDARIES_LARGE (1)").transform.localScale = new Vector3(0, 0, 0);
@@ -570,11 +605,15 @@ namespace SkyAndCloud
             Commands.RegisterCommand("ResetWorldBoundaries", (args, notUses) =>
             {
                 string tip = "The World Boundaries will be reset.";
-                try { GameObject.Find("WORLD BOUNDARIES").transform.position = new Vector3(1, 1, 1);
+                try
+                {
+                    GameObject.Find("WORLD BOUNDARIES").transform.position = new Vector3(1, 1, 1);
                     isBoundairesAway = false;
                     保存设定();
                     return tip;
-                } catch {
+                }
+                catch
+                {
                     try
                     {
                         GameObject.Find("WORLD BOUNDARIES LARGE").transform.position = new Vector3(2.8f, 1, 2.3f);
@@ -591,7 +630,8 @@ namespace SkyAndCloud
                             保存设定();
                             return tip;
                         }
-                        catch {
+                        catch
+                        {
                             try
                             {
                                 GameObject.Find("WORLD BOUNDARIES_LARGE (1)").transform.localScale = new Vector3(3, 0, 3);
@@ -768,7 +808,6 @@ namespace SkyAndCloud
             }, "Add Extra Smoke and light to cannons");//Cannon
         }
 
-
         //public int CurrentLevel = 2;
         IEnumerator SkyBox()
         {
@@ -780,7 +819,7 @@ namespace SkyAndCloud
                 {
                     WWW www = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/SkyBoxTexture.png");
                     Texture2D texture;
-                    try 
+                    try
                     {
                         byte[] TexByte = System.IO.File.ReadAllBytes(Application.dataPath + "/Mods/Blocks/Textures/SkyBoxTexture.png");
                         texture = www.texture;
@@ -788,11 +827,11 @@ namespace SkyAndCloud
                         GameObject.Find("STAR SPHERE").GetComponent<MeshRenderer>().material.mainTexture.wrapMode = TextureWrapMode.Clamp;
                     }
                     catch
-                     { Debug.Log("There is no such a texture file named \"SkyBoxTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); yield break; }
+                    { Debug.Log("There is no such a texture file named \"SkyBoxTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); yield break; }
                     //GameObject.Find("Main Camera").GetComponent<Camera>().clearFlags = CameraClearFlags.Skybox;
                 }
             }
-            catch(Exception e) { Debug.Log(e); }
+            catch (Exception e) { Debug.Log(e); }
             StartCoroutine(SkyBox());
         }
 
@@ -843,7 +882,7 @@ namespace SkyAndCloud
                                     GameObject.Find("WORLD BOUNDARIES_LARGE (1)").transform.localScale = new Vector3(0, 0, 0);
                                     isBoundairesAway = true;
                                 }
-                                catch {}
+                                catch { }
                             }
                         }
                     }
@@ -856,7 +895,7 @@ namespace SkyAndCloud
                 try { GameObject.Find("Main Camera").GetComponent<Camera>().farClipPlane = CameraFarClip; } catch { }
             }
             catch { }
-            
+
 
             //Debug.Log("here!!!");
             /*GameObject.Find("Directional light").AddComponent<LensFlare>(); 
@@ -882,11 +921,12 @@ namespace SkyAndCloud
                     return;
                 }
             }*/
-            
+
         }
         void FixedUpdate()
         {
             //Debug.Log(Application.loadedLevel);
+
             if (StatMaster.isSimulating && !DetectedStartedSimulating && IsNightMode)
             {
                 DetectedStartedSimulating = true;
@@ -895,18 +935,19 @@ namespace SkyAndCloud
             if (GameObject.Find("STAR SPHERE"))
             {
                 GameObject.Find("STAR SPHERE").transform.eulerAngles += new Vector3(0, 0.001f, 0.001f);
-                GameObject.Find("STAR SPHERE").transform.localScale =  Vector3.one * (2068/1500) * CameraFarClip;
+                GameObject.Find("STAR SPHERE").transform.localScale = Vector3.one * (2068 / 1500) * CameraFarClip;
             }
             if (!StatMaster.isSimulating) { DetectedStartedSimulating = false; }
 
             resetCloudsNow = cloudAmountTemp != cloudAmount;
-                if (tempLevelName != UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)
+            if (tempLevelName != UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)
             {
-                    tempLevelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-                    读取设定();
-                    resetCloudsNow = true;
-                }
-            if (cloudTemp == null) {
+                tempLevelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                读取设定();
+                resetCloudsNow = true;
+            }
+            if (cloudTemp == null)
+            {
                 cloudTemp = Instantiate(GameObject.Find("CLoud"));
                 cloudTemp.SetActive(false);
                 DontDestroyOnLoad(cloudTemp);
@@ -930,104 +971,120 @@ namespace SkyAndCloud
             }
 
             GameObject flo = GameObject.Find("FloorBig");
-                if (flo != null)
-                {
-                    floorScale = GameObject.Find("FloorBig").transform.localScale;
-                }
-                //Debug.Log("Here");
-                if (clouds.Count == 0 && cloudAmount > 0)
-                {
-                    clouds.Clear();
-                //shadow = new GameObject[cloudAmount];
-                    for (int i = 0; i <= cloudAmount - 1; ++i)
-                    {
-                        
-                        //GameObject.DontDestroyOnLoad(clouds[i]);
-                        if (i < (int)cloudAmount / 3)
-                        {
-                            clouds.Add((GameObject)Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(higherCloudsMinHeight, higherCloudsMaxHeight), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)), new Quaternion(0, 0, 0, 0)));
-                            clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startColor = higherCloudsColor;
-                            clouds[clouds.Count - 1].layer = 12;
-                        }
-                        else
-                        {
-                            clouds.Add((GameObject)Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(lowerCloudsMinHeight, lowerCloudsMaxHeight), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)), new Quaternion(0, 0, 0, 0)));
-                            clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startColor = lowerCloudsColor;
-                            clouds[clouds.Count - 1].layer = 12;
-                        }
-                        clouds[clouds.Count - 1].SetActive(true);
-                        clouds[clouds.Count - 1].transform.SetParent(GameObject.Find("Cloud Mod").transform);
-                        clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startSize = 30;
-                        clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startLifetime = 5;
-                        clouds[clouds.Count - 1].transform.localScale = new Vector3(15, 15, 15);
-                        clouds[clouds.Count - 1].GetComponent<ParticleSystem>().maxParticles = (int)clouds[i].transform.position.y;
-                        /*shadow[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                        Destroy(shadow[i].GetComponent<Collider>());//.transform.parent = shadow[i].transform;
-                        shadow[i].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly; 
-                        shadow[i].layer = clouds[i].layer;
-                        shadow[i].transform.position = clouds[i].transform.position;
-                        shadow[i].transform.parent = clouds[i].transform;
-                        shadow[i].transform.localPosition = new Vector3(0.5f, 0, 0);
-                        shadow[i].transform.localEulerAngles = new Vector3(18,10,353);
-                        shadow[i].transform.localScale = new Vector3(4,2.5f,2.5f);
-                        shadow[i].GetComponent<Renderer>().receiveShadows = true;
-                        foreach (Material mtrl in shadow[i].GetComponent<Renderer>().materials) {
-                            mtrl.color= new Color(1, 1, 1, 0.3f);
-                        }
-                        Destroy(shadow[i].GetComponent<Renderer>().material.mainTexture);*/
-                        clouds[clouds.Count - 1].transform.LookAt(new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)));
-                        try
-                        {
-                          //  clouds[i].GetComponent<ParticleRenderer>().receiveShadows = true;
-                            clouds[clouds.Count - 1].GetComponent<ParticleSystemRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-                        }
-                        catch { Debug.Log("Shadow failed!"); }
-                    }
-                }
-                else
-                {
-                    foreach (GameObject cloud in clouds)
-                    {
-                        float randomMove = UnityEngine.Random.Range(0.01f, 0.02f);
-
-                        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "TITLE SCREEN") { cloud.transform.position = new Vector3(-9999, -9999, -9999); }
-                        if (CustomCloudSpeed) { cloud.transform.position += new Vector3(cloudSpeed[0], randomMove - 0.015f, cloudSpeed[1]); }
-                        else
-                        {
-                            cloud.transform.position += new Vector3(randomMove, randomMove - 0.015f, randomMove);
-                        }
-                        cloud.transform.localScale *= 1 + randomMove - 0.015f;
-                        cloud.GetComponent<ParticleSystem>().startLifetime = 0.01f;
-                        cloud.GetComponent<ParticleSystem>().startSize = cloudSizeScale * 30;
-                        cloud.transform.localScale = new Vector3(15 * cloudSizeScale, 15 * cloudSizeScale, 15 * cloudSizeScale);
-                        cloud.GetComponent<ParticleSystem>().startLifetime = 5;
-
-                        if (cloud.transform.position.x > floorScale.x / 2 + 200) { cloud.transform.position = new Vector3(-floorScale.x / 2 - 195, cloud.transform.position.y, cloud.transform.position.z); }
-                        if (cloud.transform.position.z > floorScale.z / 2 + 200) { cloud.transform.position = new Vector3(cloud.transform.position.x, cloud.transform.position.y, -floorScale.z / 2 - 195); }
-                        if (cloud.transform.position.x < -floorScale.x / 2 - 200) { cloud.transform.position = new Vector3(floorScale.x / 2 + 195, cloud.transform.position.y, cloud.transform.position.z); }
-                        if (cloud.transform.position.z < -floorScale.z / 2 - 200) { cloud.transform.position = new Vector3(cloud.transform.position.x, cloud.transform.position.y, floorScale.z / 2 + 195); }
-
-                    }
-                }
-                
-                //foreach (GameObject oneShadow in shadow) { if (isShadowOff) { oneShadow.transform.localScale = new Vector3(0, 0, 0); } else { oneShadow.transform.localScale = new Vector3(4, 2.5f, 2.5f); } }
-
-
+            if (flo != null)
+            {
+                floorScale = GameObject.Find("FloorBig").transform.localScale;
             }
+            //Debug.Log("Here");
+            if (clouds.Count == 0 && cloudAmount > 0)
+            {
+                clouds.Clear();
+                //shadow = new GameObject[cloudAmount];
+                for (int i = 0; i <= cloudAmount - 1; ++i)
+                {
+
+                    //GameObject.DontDestroyOnLoad(clouds[i]);
+                    if (i < (int)cloudAmount / 3)
+                    {
+                        clouds.Add((GameObject)Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(higherCloudsMinHeight, higherCloudsMaxHeight), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)), new Quaternion(0, 0, 0, 0)));
+                        clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startColor = higherCloudsColor;
+                        clouds[clouds.Count - 1].layer = 12;
+                    }
+                    else
+                    {
+                        clouds.Add((GameObject)Instantiate(cloudTemp, new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(lowerCloudsMinHeight, lowerCloudsMaxHeight), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)), new Quaternion(0, 0, 0, 0)));
+                        clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startColor = lowerCloudsColor;
+                        clouds[clouds.Count - 1].layer = 12;
+                    }
+                    //ParticleSystem.CollisionModule PSCM = clouds[clouds.Count - 1].GetComponent<ParticleSystem>().collision;
+                    //PSCM.enabled = true;
+                    //PSCM.bounce = 1000;
+                    //PSCM.dampen = 0;
+                    //PSCM.enableDynamicColliders = true;
+                    //PSCM.enableInteriorCollisions = true;
+                    //PSCM.maxKillSpeed = 3300;
+                    //PSCM.voxelSize = 100;
+                    //PSCM.type = ParticleSystemCollisionType.World;
+                    //PSCM.radiusScale = 15;
+                    //PSCM.quality = ParticleSystemCollisionQuality.Low;
+
+                    clouds[clouds.Count - 1].SetActive(true);
+                    clouds[clouds.Count - 1].transform.SetParent(GameObject.Find("Cloud Mod").transform);
+                    clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startSize = 30;
+                    clouds[clouds.Count - 1].GetComponent<ParticleSystem>().startLifetime = 5;
+                    clouds[clouds.Count - 1].transform.localScale = new Vector3(15, 15, 15);
+                    clouds[clouds.Count - 1].GetComponent<ParticleSystem>().maxParticles = (int)clouds[i].transform.position.y;
+                    /*shadow[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    Destroy(shadow[i].GetComponent<Collider>());//.transform.parent = shadow[i].transform;
+                    shadow[i].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly; 
+                    shadow[i].layer = clouds[i].layer;
+                    shadow[i].transform.position = clouds[i].transform.position;
+                    shadow[i].transform.parent = clouds[i].transform;
+                    shadow[i].transform.localPosition = new Vector3(0.5f, 0, 0);
+                    shadow[i].transform.localEulerAngles = new Vector3(18,10,353);
+                    shadow[i].transform.localScale = new Vector3(4,2.5f,2.5f);
+                    shadow[i].GetComponent<Renderer>().receiveShadows = true;
+                    foreach (Material mtrl in shadow[i].GetComponent<Renderer>().materials) {
+                        mtrl.color= new Color(1, 1, 1, 0.3f);
+                    }
+                    Destroy(shadow[i].GetComponent<Renderer>().material.mainTexture);*/
+                    clouds[clouds.Count - 1].transform.LookAt(new Vector3(UnityEngine.Random.Range(-floorScale.x / 2 - 200, floorScale.x / 2 + 200), UnityEngine.Random.Range(-700f, 700f), UnityEngine.Random.Range(-floorScale.z / 2 - 200, floorScale.z / 2 + 200)));
+                    try
+                    {
+                        //  clouds[i].GetComponent<ParticleRenderer>().receiveShadows = true;
+                        clouds[clouds.Count - 1].GetComponent<ParticleSystemRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                    }
+                    catch { Debug.Log("Shadow failed!"); }
+                }
+            }
+            else
+            {
+                foreach (GameObject cloud in clouds)
+                {
+                    float randomMove = UnityEngine.Random.Range(0.01f, 0.02f);
+
+                    if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "TITLE SCREEN") { cloud.transform.position = new Vector3(-9999, -9999, -9999); }
+                    if (CustomCloudSpeed) { cloud.transform.position += new Vector3(cloudSpeed[0], randomMove - 0.015f, cloudSpeed[1]); }
+                    else
+                    {
+                        cloud.transform.position += new Vector3(randomMove, randomMove - 0.015f, randomMove);
+                    }
+                    cloud.transform.localScale *= 1 + randomMove - 0.015f;
+                    cloud.GetComponent<ParticleSystem>().startLifetime = 0.01f;
+                    cloud.GetComponent<ParticleSystem>().startSize = cloudSizeScale * 30;
+                    cloud.transform.localScale = new Vector3(15 * cloudSizeScale, 15 * cloudSizeScale, 15 * cloudSizeScale);
+                    cloud.GetComponent<ParticleSystem>().startLifetime = 5;
+
+                    if (cloud.transform.position.x > floorScale.x / 2 + 200) { cloud.transform.position = new Vector3(-floorScale.x / 2 - 195, cloud.transform.position.y, cloud.transform.position.z); }
+                    if (cloud.transform.position.z > floorScale.z / 2 + 200) { cloud.transform.position = new Vector3(cloud.transform.position.x, cloud.transform.position.y, -floorScale.z / 2 - 195); }
+                    if (cloud.transform.position.x < -floorScale.x / 2 - 200) { cloud.transform.position = new Vector3(floorScale.x / 2 + 195, cloud.transform.position.y, cloud.transform.position.z); }
+                    if (cloud.transform.position.z < -floorScale.z / 2 - 200) { cloud.transform.position = new Vector3(cloud.transform.position.x, cloud.transform.position.y, floorScale.z / 2 + 195); }
+
+                }
+            }
+
+            //foreach (GameObject oneShadow in shadow) { if (isShadowOff) { oneShadow.transform.localScale = new Vector3(0, 0, 0); } else { oneShadow.transform.localScale = new Vector3(4, 2.5f, 2.5f); } }
+
+
+        }
         void ItIsNightSoEveryCloudShouldBeDeepDarkFantasy()
         {
             higherCloudsColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
             lowerCloudsColor = new Color(0.6f, 0.6f, 0.6f, 0.5f);
             resetCloudsNow = true;
-            
+
             foreach (ParticleSystemRenderer f in FindObjectsOfType<ParticleSystemRenderer>())
             {
-                try {
-                    if (f.GetComponent<ParticleSystemRenderer>().name.Contains("Fire") || f.GetComponent<ParticleSystemRenderer>().material.name.Contains("Flame"))
+                try
+                {
+                    ParticleSystemRenderer psr = f.GetComponent<ParticleSystemRenderer>();
+                    if (psr.name.Contains("Fire") || (psr.material.name.Contains("Flame") && !psr.material.name.Contains("Smoke")))
                     {
-                        f.gameObject.AddComponent<ShakeLightingWholalalalalalallalala>();
+                        if (f)
+                            f.gameObject.AddComponent<ShakeLightingWholalalalalalallalala>();
                     }
-                } catch { }
+                }
+                catch { }
             }
             /*foreach (FireController f in FindObjectsOfType<FireController>())
             {
@@ -1036,14 +1093,14 @@ namespace SkyAndCloud
                     f.gameObject.AddComponent<ShakeLightingWholalalalalalallalala>();
                 } 
             }*/
-            
-          }
+
+        }
         void ItIsDaySoEveryCloudShouldBeBright()
         {
-             higherCloudsColor = new Color(1f, 1f, 1f, 1f);
-             lowerCloudsColor = new Color(0.92f, 0.9f, 0.8f, 1);
-             resetCloudsNow = true;
-            }
+            higherCloudsColor = new Color(1f, 1f, 1f, 1f);
+            lowerCloudsColor = new Color(0.92f, 0.9f, 0.8f, 1);
+            resetCloudsNow = true;
+        }
         void 读取设定()
         {
             //if (File.Exists(Application.dataPath + "/Mods/Cloud Mod Setting Tempelate.txt") && new FileInfo((Application.dataPath + "/Mods/Cloud Mod Setting Tempelate.txt")).Length >= 5)
@@ -1172,6 +1229,11 @@ namespace SkyAndCloud
             lowerCloudsMaxHeight = Configuration.GetFloat("Lower Clouds Spawn Range Max", lowerCloudsMaxHeight);
             lowerCloudsMinHeight = Configuration.GetFloat("Lower Clouds Spawn Range Min", lowerCloudsMinHeight);
             isFogAway = Configuration.GetBool("Deactivate Fog", isFogAway);
+            isExtendingShadow = Configuration.GetBool("Using Furthur shadow drawing distance", isExtendingShadow);
+            if(isExtendingShadow)
+            {
+                ShadowDistSetter();
+            }
             FogOpreation(isFogAway);
             string FloorBigSizeScaleString = Configuration.GetString("floorBig Scale", floorScale.x + "," + floorScale.y + "," + floorScale.z);
             floorScale = new Vector3(float.Parse(FloorBigSizeScaleString.Split(',')[0]), float.Parse(FloorBigSizeScaleString.Split(',')[1]), float.Parse(FloorBigSizeScaleString.Split(',')[2]));
@@ -1214,7 +1276,7 @@ namespace SkyAndCloud
                             {
                                 GameObject.Find("WORLD BOUNDARIES_LARGE (1)").transform.localScale = new Vector3(0, 0, 0);
                             }
-                            catch {  }
+                            catch { }
                         }
                     }
                 }
@@ -1265,26 +1327,27 @@ namespace SkyAndCloud
         }
         void 保存设定()
         {
-                Configuration.SetInt("Cloud Amount", cloudAmount);
-                Configuration.SetFloat("Cloud Size Scale", cloudSizeScale);
-                Configuration.SetFloat("Higher Clouds Spawn Range Max", higherCloudsMaxHeight);
-                Configuration.SetFloat("Higher Clouds Spawn Range Min", higherCloudsMinHeight);
-                Configuration.SetFloat("Lower Clouds Spawn Range Max", lowerCloudsMaxHeight);
-                Configuration.SetFloat("Lower Clouds Spawn Range Min", lowerCloudsMinHeight);
-                Configuration.SetString("Higher Clouds Color", higherCloudsColor.r + "," + higherCloudsColor.g + "," + higherCloudsColor.b + "," + higherCloudsColor.a);
-                Configuration.SetString("Lower Clouds Color", lowerCloudsColor.r + "," + lowerCloudsColor.g + "," + lowerCloudsColor.b + "," + lowerCloudsColor.a);
-                Configuration.SetString("Sky Color", SkyColor.r + "," + SkyColor.g + "," + SkyColor.b + "," + SkyColor.a);
-                Configuration.SetBool("Cloud Speed Customized", CustomCloudSpeed);
-                Configuration.SetString("Cloud Speed", cloudSpeed[0] + "," + cloudSpeed[1]);
-                Configuration.SetBool("Deactivate Fog", isFogAway);
-                Configuration.SetString("floorBig Scale", floorScale.x + "," + floorScale.y + "," + floorScale.z);
-                Configuration.SetFloat("Camera Far Clip", CameraFarClip);
-                Configuration.SetBool("is Shadow off", isShadowOff);
-                Configuration.SetBool("is World Boundaries scaled", isBoundairesAway);
-                Configuration.SetBool("Is Night mode on", IsNightMode);
-                Configuration.SetBool("Is Extra Cannon Effect on", ExtraCannonSmokeEffect);
-                //File.WriteAllText(Application.dataPath + "/Mods/Cloud Mod Setting Tempelate.txt", settingTemp);
-                Configuration.Save();
+            Configuration.SetInt("Cloud Amount", cloudAmount);
+            Configuration.SetFloat("Cloud Size Scale", cloudSizeScale);
+            Configuration.SetFloat("Higher Clouds Spawn Range Max", higherCloudsMaxHeight);
+            Configuration.SetFloat("Higher Clouds Spawn Range Min", higherCloudsMinHeight);
+            Configuration.SetFloat("Lower Clouds Spawn Range Max", lowerCloudsMaxHeight);
+            Configuration.SetFloat("Lower Clouds Spawn Range Min", lowerCloudsMinHeight);
+            Configuration.SetString("Higher Clouds Color", higherCloudsColor.r + "," + higherCloudsColor.g + "," + higherCloudsColor.b + "," + higherCloudsColor.a);
+            Configuration.SetString("Lower Clouds Color", lowerCloudsColor.r + "," + lowerCloudsColor.g + "," + lowerCloudsColor.b + "," + lowerCloudsColor.a);
+            Configuration.SetString("Sky Color", SkyColor.r + "," + SkyColor.g + "," + SkyColor.b + "," + SkyColor.a);
+            Configuration.SetBool("Cloud Speed Customized", CustomCloudSpeed);
+            Configuration.SetString("Cloud Speed", cloudSpeed[0] + "," + cloudSpeed[1]);
+            Configuration.SetBool("Deactivate Fog", isFogAway);
+            Configuration.SetString("floorBig Scale", floorScale.x + "," + floorScale.y + "," + floorScale.z);
+            Configuration.SetFloat("Camera Far Clip", CameraFarClip);
+            Configuration.SetBool("is Shadow off", isShadowOff);
+            Configuration.SetBool("is World Boundaries scaled", isBoundairesAway);
+            Configuration.SetBool("Is Night mode on", IsNightMode);
+            Configuration.SetBool("Is Extra Cannon Effect on", ExtraCannonSmokeEffect);
+            Configuration.SetBool("Using Furthur shadow drawing distance", isExtendingShadow);
+            //File.WriteAllText(Application.dataPath + "/Mods/Cloud Mod Setting Tempelate.txt", settingTemp);
+            Configuration.Save();
         }
         string FogOpreation(bool FogStatus)
         {
@@ -1364,7 +1427,8 @@ namespace SkyAndCloud
                         {
                             CB.gameObject.transform.Find("Particle System").gameObject.AddComponent<炮火之光>();
                         }
-                        catch {
+                        catch
+                        {
                         }
                 }
             }
@@ -1405,6 +1469,14 @@ namespace SkyAndCloud
 
             return (texture);
         }
+
+        void ShadowDistSetter()
+        {
+            QualitySettings.shadowDistance = CameraFarClip;
+            QualitySettings.realtimeReflectionProbes = true;
+            QualitySettings.shadowResolution = ShadowResolution.VeryHigh;
+            QualitySettings.shadowCascades = 100;
+        }
     }
     /*
     WWW wWW = new WWW(string.Concat("file:///", Application.dataPath, "/Mods/Resources/", BuildingTools.Resources.assetBundleName));
@@ -1431,10 +1503,15 @@ namespace SkyAndCloud
         public float lastFUTime;
         public float FUcount = 0;
         public CloudMod SettingsFrom;
+        public GameObject LightThings;
+        public ParticleSystem.EmissionModule PSEM;
 
-        void Start ()
+        void Start()
         {
             SettingsFrom = GameObject.Find("Cloud Mod").GetComponent<CloudMod>();
+            LightThings = new GameObject("ShakeyLight");
+            LightThings.transform.SetParent(this.transform);
+            LightThings.transform.position = this.transform.position;
             //Pre-Setting
             FireColor = SettingsFrom.FlameLightColor;
             ShakeMax = SettingsFrom.ShakeMax;
@@ -1446,9 +1523,11 @@ namespace SkyAndCloud
             float ScaleMag = Vector3.Magnitude(this.transform.localScale);
             FUcount = 0;
 
-            if (!this.gameObject.GetComponent<Light>())
+            PSEM = this.GetComponent<ParticleSystem>().emission;
+
+            if (!LightThings.GetComponent<Light>())
             {
-                ThisLight = this.gameObject.AddComponent<Light>();
+                ThisLight = LightThings.AddComponent<Light>();
                 ThisLight.type = LightType.Point;
                 ThisLight.color = FireColor;
                 ThisLight.intensity = FireLightIntensity * ScaleMag;
@@ -1459,14 +1538,18 @@ namespace SkyAndCloud
                 ThisLight.enabled = false;
                 lastFUTime = this.GetComponent<ParticleSystem>().time;
             }
-            else 
+            else
             {
                 DestroyImmediate(this.GetComponent<ShakeLightingWholalalalalalallalala>());
             }
         }
 
-        void FixedUpdate()//弃用方案
+        void FixedUpdate()
         {
+            ParticleSystem PS = this.GetComponent<ParticleSystem>();
+            PSEM = PS.emission;
+
+
             FireColor = SettingsFrom.FlameLightColor;
             ShakeMax = SettingsFrom.ShakeMax;
             ShakeMin = SettingsFrom.ShakeMin;
@@ -1475,20 +1558,15 @@ namespace SkyAndCloud
             FireLightRange = SettingsFrom.FireLightRange;
 
             ++FUcount;
-            float ScaleMag = Vector3.Magnitude(this.transform.localScale);
+            float ScaleMag = Vector3.Magnitude(this.transform.lossyScale);
             if (this.name == "Fuse") Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
             if (!StatMaster.isSimulating) Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
-             if (this.GetComponent<ParticleSystem>())
+
+
+            if (PS)
             {
-                if (!this.GetComponent<ParticleSystem>().IsAlive())
-                 {
-                    ThisLight.enabled = false;
-                }
-                else
-                {
-                    ThisLight.enabled = true;
-                }
-                 lastFUTime = this.GetComponent<ParticleSystem>().time;
+                ThisLight.enabled = PS.IsAlive();
+                lastFUTime = PS.time;
             }
             /*else {
                 Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
@@ -1496,14 +1574,14 @@ namespace SkyAndCloud
             if (ShakeTheLight)
             {
                 ThisLight.intensity = FireLightIntensity /* ScaleMag */;
-                ThisLight.range = FireLightRange /* ScaleMag */ * (UnityEngine.Random.value * (ShakeMax - ShakeMin) + ShakeMin);
+                ThisLight.range = FireLightRange /* ScaleMag */ * (UnityEngine.Random.Range(ShakeMin, ShakeMax));
                 ThisLight.color = FireColor;
                 ShakeTheLight = false;
             }
             if (FUcount % Shakefrequency == 0) ShakeTheLight = true;
         }
-        }
-    public class 炮火之光:MonoBehaviour
+    }
+    public class 炮火之光 : MonoBehaviour
     {
         public float FireLightIntensity;
         public float FireLightRange;
@@ -1528,7 +1606,7 @@ namespace SkyAndCloud
             if (!this.gameObject.GetComponent<Light>())
             {
                 ThisLight = this.gameObject.AddComponent<Light>();
-                ThisLight.transform.localPosition -= Vector3.up * 0.5f ;
+                ThisLight.transform.localPosition -= Vector3.up * 0.5f;
                 ThisLight.type = LightType.Point;
                 ThisLight.color = FireColor;
                 ThisLight.intensity = FireLightIntensity;
@@ -1540,21 +1618,23 @@ namespace SkyAndCloud
                 //DontDestroyOnLoad(ThisLight);
                 lastFUTime = this.GetComponent<ParticleSystem>().time;
             }
-            else 
+            else
             {
                 DestroyImmediate(this.GetComponent<ShakeLightingWholalalalalalallalala>());
             }
-        } 
+        }
 
         void FixedUpdate()//弃用方案
         {
             FireColor = SettingsFrom.FlameLightColor;
-            FireLightIntensity = 8 * (0.15f-GetComponent<ParticleSystem>().time)/0.15f;
-            FireLightRange = SettingsFrom.FireLightRange * GetComponentInParent<BlockBehaviour>().Sliders[0].Value /10;
+            FireLightIntensity = 8 * (0.15f - GetComponent<ParticleSystem>().time) / 0.15f;
+            FireLightRange = SettingsFrom.FireLightRange * GetComponentInParent<BlockBehaviour>().Sliders[0].Value / 10;
             ++FUcount;
-            try {
-                ThisLight.intensity = FireLightIntensity * GetComponentInParent<BlockBehaviour>().Sliders[0].Value/10;
-            } catch
+            try
+            {
+                ThisLight.intensity = FireLightIntensity * GetComponentInParent<BlockBehaviour>().Sliders[0].Value / 10;
+            }
+            catch
             {
                 ThisLight = this.gameObject.GetComponent<Light>();
                 ThisLight.type = LightType.Point;
@@ -1574,10 +1654,11 @@ namespace SkyAndCloud
             ParticleSystem PS = this.GetComponent<ParticleSystem>();
             PS.maxParticles = (int)Mathf.Log(炮力 * 10, 校准参数) * 1000;
             PS.startLifetime = Mathf.Log(炮力 * 10, 30) * 1.27f;
-            PS.emissionRate = (int)(Math.Log(炮力 * 10, 校准参数) * 141);
-            PS.startSpeed = Mathf.Log(炮力*10, 校准参数) * 1.27f; 
-            
-            if (this.GetComponent<ParticleSystem>().IsAlive()) 
+            ParticleSystem.EmissionModule EM = PS.emission;
+            EM.rate = (int)(Math.Log(炮力 * 10, 校准参数) * 141);
+            PS.startSpeed = Mathf.Log(炮力 * 10, 校准参数) * 1.27f;
+
+            if (this.GetComponent<ParticleSystem>().IsAlive())
             {
                 if (this.GetComponent<ParticleSystem>().time == lastFUTime)
                 {
@@ -1594,22 +1675,22 @@ namespace SkyAndCloud
                     }*/
         }
     }
-        //void FixedUpdate()
-        //{
-        //    float ScaleMag = Vector3.Magnitude(this.transform.localScale);
-        //     if (this.GetComponent<FireController>())
-        //    {
-        //        ThisLight.enabled = this.GetComponent<FireController>().onFire;
-        //    }
-        //    else {
-        //        Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
-        //            }
-        //    if (ShakeTheLight)
-        //    {
-        //        ThisLight.intensity = FireLightIntensity /* ScaleMag */;
-        //        ThisLight.range = FireLightRange /* ScaleMag */ * (UnityEngine.Random.value * (ShakeMax - ShakeMin) + ShakeMin);
-        //        ThisLight.color = FireColor;
-        //    }
-        //}
-        
-    }
+    //void FixedUpdate()
+    //{
+    //    float ScaleMag = Vector3.Magnitude(this.transform.localScale);
+    //     if (this.GetComponent<FireController>())
+    //    {
+    //        ThisLight.enabled = this.GetComponent<FireController>().onFire;
+    //    }
+    //    else {
+    //        Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
+    //            }
+    //    if (ShakeTheLight)
+    //    {
+    //        ThisLight.intensity = FireLightIntensity /* ScaleMag */;
+    //        ThisLight.range = FireLightRange /* ScaleMag */ * (UnityEngine.Random.value * (ShakeMax - ShakeMin) + ShakeMin);
+    //        ThisLight.color = FireColor;
+    //    }
+    //}
+
+}
