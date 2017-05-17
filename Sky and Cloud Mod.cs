@@ -14,11 +14,11 @@ namespace SkyAndCloud
 
     public class BesiegeModLoader : Mod
     {
-        public override string Name { get { return "Cloud_Mod"; } }
-        public override string DisplayName { get { return "Cloud Mod"; } }
+        public override string Name { get { return "Sky_Mod"; } }
+        public override string DisplayName { get { return "Sky Mod"; } }
         public override string BesiegeVersion { get { return "v0.45"; } }
         public override string Author { get { return "覅是"; } }
-        public override Version Version { get { return new Version("0.9"); } }
+        public override Version Version { get { return new Version("1.0"); } }
         public override bool CanBeUnloaded { get { return true; } }
 
         public GameObject temp;
@@ -127,7 +127,6 @@ namespace SkyAndCloud
         void Start()
         {
             //Application.LoadLevel (5);
-            StartCoroutine(SkyBox());
 
             Commands.RegisterHelpMessage("CLOUDS!");
             Commands.RegisterCommand("ResetCloudsAmount", (args, notUses) =>
@@ -809,37 +808,56 @@ namespace SkyAndCloud
         }
 
         //public int CurrentLevel = 2;
-        IEnumerator SkyBox()
+        void SkyBox()
         {
-            yield return new WaitForSeconds(0.01f);
+            Debug.Log("K");
             try
             {
+                WWW www = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Resources/SkyBoxTexture.jpg");
+                Texture2D texture;
+                //YAY adding models in game
+                NeededResource TheBall = new NeededResource(ResourceType.Mesh, "Skydome.obj");
+                AssetImporter.StartImport.Mesh(ref TheBall.mesh, TheBall.resourcePath);
+                GameObject SkySphere;
+                Destroy(GameObject.Find("STAR SPHERE"));
+                SkySphere = new GameObject("SKY SPHERE");
+                SkySphere.AddComponent<MeshRenderer>();
+                SkySphere.AddComponent<MeshFilter>();
 
-                if (Input.GetKey(KeyCode.F5))
+                SkySphere.AddComponent<CameraFollower>();
+                SkySphere.GetComponent<MeshFilter>().mesh = TheBall.mesh;
+                try
                 {
-                    WWW www = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Textures/SkyBoxTexture.png");
-                    Texture2D texture;
-                    try
-                    {
-                        byte[] TexByte = System.IO.File.ReadAllBytes(Application.dataPath + "/Mods/Blocks/Textures/SkyBoxTexture.png");
-                        texture = www.texture;
-                        GameObject.Find("STAR SPHERE").GetComponent<MeshRenderer>().material.mainTexture = texture;
-                        GameObject.Find("STAR SPHERE").GetComponent<MeshRenderer>().material.mainTexture.wrapMode = TextureWrapMode.Clamp;
-                    }
-                    catch
-                    { Debug.Log("There is no such a texture file named \"SkyBoxTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Textures\\! "); yield break; }
-                    //GameObject.Find("Main Camera").GetComponent<Camera>().clearFlags = CameraClearFlags.Skybox;
+                    byte[] TexByte = System.IO.File.ReadAllBytes(Application.dataPath + "/Mods/Blocks/Resources/SkyBoxTexture.jpg");
+                    texture = www.texture;
+                    MeshRenderer mr = SkySphere.GetComponent<MeshRenderer>();
+                    mr.material = new Material(Shader.Find("Particles/Alpha Blended"));
+                    //mr.material = new Material(Shader.Find("Diffuse"));
+                    mr.material.mainTexture = texture;
+                    mr.material.mainTexture.wrapMode = TextureWrapMode.Clamp;
+                    mr.receiveShadows = false;
+                    mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 }
+                catch
+                { Debug.Log("Exception happened! Check if there is such a texture file named \"SkyBoxTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Resources\\ and a obj file called \"Skydome.obj\"! "); return; }
+                //GameObject.Find("Main Camera").GetComponent<Camera>().clearFlags = CameraClearFlags.Skybox;
+
             }
             catch (Exception e) { Debug.Log(e); }
-            StartCoroutine(SkyBox());
         }
 
         void Update()
         {
-            if (ExtraCannonSmokeEffect && UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "TITLE SCREEN")
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "TITLE SCREEN")
             {
-                炮火添加器();
+                if (Input.GetKey(KeyCode.F5))
+                {
+                    SkyBox();
+                }
+                if (ExtraCannonSmokeEffect)
+                {
+                    炮火添加器();
+                }
             }
             try
             {
@@ -1230,7 +1248,7 @@ namespace SkyAndCloud
             lowerCloudsMinHeight = Configuration.GetFloat("Lower Clouds Spawn Range Min", lowerCloudsMinHeight);
             isFogAway = Configuration.GetBool("Deactivate Fog", isFogAway);
             isExtendingShadow = Configuration.GetBool("Using Furthur shadow drawing distance", isExtendingShadow);
-            if(isExtendingShadow)
+            if (isExtendingShadow)
             {
                 ShadowDistSetter();
             }
@@ -1473,9 +1491,9 @@ namespace SkyAndCloud
         void ShadowDistSetter()
         {
             QualitySettings.shadowDistance = CameraFarClip;
-            QualitySettings.realtimeReflectionProbes = true;
             QualitySettings.shadowResolution = ShadowResolution.VeryHigh;
-            QualitySettings.shadowCascades = 100;
+            QualitySettings.shadowCascades = (100);
+            QualitySettings.shadowProjection = ShadowProjection.StableFit;
         }
     }
     /*
@@ -1692,5 +1710,17 @@ namespace SkyAndCloud
     //        ThisLight.color = FireColor;
     //    }
     //}
-
+    public class CameraFollower : MonoBehaviour
+    {
+        Camera main;
+        void Start()
+        {
+            main = GameObject.Find("Main Camera").GetComponent<Camera>();
+        }
+        void Update()
+        {
+            this.transform.position = main.transform.position;
+            this.transform.localScale = Vector3.one * main.farClipPlane / 42;
+        }
+    }
 }
