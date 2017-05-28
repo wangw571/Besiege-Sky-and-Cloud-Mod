@@ -18,7 +18,7 @@ namespace SkyAndCloud
         public override string DisplayName { get { return "Sky Mod"; } }
         public override string BesiegeVersion { get { return "v0.45"; } }
         public override string Author { get { return "覅是"; } }
-        public override Version Version { get { return new Version("1.0"); } }
+        public override Version Version { get { return new Version("1.01"); } }
         public override bool CanBeUnloaded { get { return true; } }
 
         public GameObject temp;
@@ -40,6 +40,7 @@ namespace SkyAndCloud
     }
     public class CloudMod : MonoBehaviour
     {
+        public Shader AlphaBlended = new Shader { };
 
         private List<GameObject> clouds = new List<GameObject>(60);
         /*private GameObject floatingRock = new GameObject();
@@ -103,6 +104,8 @@ namespace SkyAndCloud
         public float ShakeMax = 1.25f;
         public float ShakeMin = 0.9f;
 
+        Shader shader;
+
 
         /*private IEnumerator LoadBundle()
         {
@@ -127,6 +130,8 @@ namespace SkyAndCloud
         void Start()
         {
             //Application.LoadLevel (5);
+
+            shader = Resources.Load(Application.dataPath + "/Mods/Blocks/Resources/LineBlend.shader") as Shader;
 
             Commands.RegisterHelpMessage("CLOUDS!");
             Commands.RegisterCommand("ResetCloudsAmount", (args, notUses) =>
@@ -808,9 +813,8 @@ namespace SkyAndCloud
         }
 
         //public int CurrentLevel = 2;
-        void SkyBox()
+        void SkyBox(Shader shaderzzz)
         {
-            Debug.Log("K");
             try
             {
                 WWW www = new WWW("File:///" + Application.dataPath + "/Mods/Blocks/Resources/SkyBoxTexture.jpg");
@@ -831,15 +835,17 @@ namespace SkyAndCloud
                     byte[] TexByte = System.IO.File.ReadAllBytes(Application.dataPath + "/Mods/Blocks/Resources/SkyBoxTexture.jpg");
                     texture = www.texture;
                     MeshRenderer mr = SkySphere.GetComponent<MeshRenderer>();
-                    mr.material = new Material(Shader.Find("Particles/Alpha Blended"));
-                    //mr.material = new Material(Shader.Find("Diffuse"));
+                    
+                    mr.material = new Material(shaderzzz);
                     mr.material.mainTexture = texture;
                     mr.material.mainTexture.wrapMode = TextureWrapMode.Clamp;
                     mr.receiveShadows = false;
                     mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 }
-                catch
-                { Debug.Log("Exception happened! Check if there is such a texture file named \"SkyBoxTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Resources\\ and a obj file called \"Skydome.obj\"! "); return; }
+                catch(Exception e)
+                {
+                    Debug.LogException(e);
+                    Debug.Log("Exception happened! Check if there is such a texture file named \"SkyBoxTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Resources\\ and a obj file called \"Skydome.obj\"! "); return; }
                 //GameObject.Find("Main Camera").GetComponent<Camera>().clearFlags = CameraClearFlags.Skybox;
 
             }
@@ -848,11 +854,16 @@ namespace SkyAndCloud
 
         void Update()
         {
+            //Debug.Log(GameObject.Find("ICE ROCK (3)/Ice Rock").GetComponent<MeshRenderer>().material.shader.name);
             if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "TITLE SCREEN")
             {
                 if (Input.GetKey(KeyCode.F5))
                 {
-                    SkyBox();
+                    SkyBox(Shader.Find("Custom/ReflectBumpEmiss/late"));
+                }
+                if (Input.GetKey(KeyCode.F6))
+                {
+                    SkyBox(Shader.Find("Particles/Alpha Blended"));
                 }
                 if (ExtraCannonSmokeEffect)
                 {
@@ -1722,5 +1733,6 @@ namespace SkyAndCloud
             this.transform.position = main.transform.position;
             this.transform.localScale = Vector3.one * main.farClipPlane / 42;
         }
+
     }
 }
