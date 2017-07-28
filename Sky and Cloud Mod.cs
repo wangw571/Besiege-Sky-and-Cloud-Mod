@@ -835,17 +835,18 @@ namespace SkyAndCloud
                     byte[] TexByte = System.IO.File.ReadAllBytes(Application.dataPath + "/Mods/Blocks/Resources/SkyBoxTexture.jpg");
                     texture = www.texture;
                     MeshRenderer mr = SkySphere.GetComponent<MeshRenderer>();
-                    
+
                     mr.material = new Material(shaderzzz);
                     mr.material.mainTexture = texture;
                     mr.material.mainTexture.wrapMode = TextureWrapMode.Clamp;
                     mr.receiveShadows = false;
                     mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Debug.LogException(e);
-                    Debug.Log("Exception happened! Check if there is such a texture file named \"SkyBoxTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Resources\\ and a obj file called \"Skydome.obj\"! "); return; }
+                    Debug.Log("Exception happened! Check if there is such a texture file named \"SkyBoxTexture.jpg\" \n under \\Besiege_Data\\Mods\\Blocks\\Resources\\ and a obj file called \"Skydome.obj\"! "); return;
+                }
                 //GameObject.Find("Main Camera").GetComponent<Camera>().clearFlags = CameraClearFlags.Skybox;
 
             }
@@ -1106,10 +1107,10 @@ namespace SkyAndCloud
             {
                 try
                 {
-                    ParticleSystemRenderer psr = f.GetComponent<ParticleSystemRenderer>();
-                    if (psr.name.Contains("Fire") || (psr.material.name.Contains("Flame") && !psr.material.name.Contains("Smoke")))
+                    ParticleSystemRenderer psr = f;
+                    if (psr.name.Contains("Fire") || (psr.material.name.Contains("Flame") && !psr.material.name.Contains("Smoke") && !psr.material.name.Contains("FireWork")) || (psr.material.name.Contains("Spark")))
                     {
-                        if (f)
+                        if (f && f.transform.parent.name != "Explosion" && !f.transform.GetComponentInParent<CanonBlock>())
                             f.gameObject.AddComponent<ShakeLightingWholalalalalalallalala>();
                     }
                 }
@@ -1622,9 +1623,14 @@ namespace SkyAndCloud
         public float FUcount = 0;
         public CloudMod SettingsFrom;
         public float 校准参数 = 1.1f;
+        public float 校准参数2 = 1f;
+
+        ParticleSystem PSPS;
 
         void Start()
         {
+            PSPS = GetComponent<ParticleSystem>();
+
             SettingsFrom = GameObject.Find("Cloud Mod").GetComponent<CloudMod>();
             //Pre-Setting
             FireColor = SettingsFrom.FlameLightColor;
@@ -1645,7 +1651,7 @@ namespace SkyAndCloud
                 ThisLight.range = FireLightRange;
                 ThisLight.enabled = false;
                 //DontDestroyOnLoad(ThisLight);
-                lastFUTime = this.GetComponent<ParticleSystem>().time;
+                lastFUTime = PSPS.time;
             }
             else
             {
@@ -1656,12 +1662,12 @@ namespace SkyAndCloud
         void FixedUpdate()//弃用方案
         {
             FireColor = SettingsFrom.FlameLightColor;
-            FireLightIntensity = 8 * (0.15f - GetComponent<ParticleSystem>().time) / 0.15f;
-            FireLightRange = SettingsFrom.FireLightRange * GetComponentInParent<BlockBehaviour>().Sliders[0].Value / 10;
+            FireLightIntensity = 8 * (0.15f - PSPS.time) / 0.15f;
+            FireLightRange = 校准参数2 * SettingsFrom.FireLightRange * GetComponentInParent<BlockBehaviour>().Sliders[0].Value / 10;
             ++FUcount;
             try
             {
-                ThisLight.intensity = FireLightIntensity * GetComponentInParent<BlockBehaviour>().Sliders[0].Value / 10;
+                ThisLight.intensity = 校准参数2 * FireLightIntensity * GetComponentInParent<BlockBehaviour>().Sliders[0].Value / 10;
             }
             catch
             {
@@ -1676,20 +1682,19 @@ namespace SkyAndCloud
                 ThisLight.range = FireLightRange;
                 ThisLight.enabled = false;
                 //DontDestroyOnLoad(ThisLight);
-                lastFUTime = this.GetComponent<ParticleSystem>().time;
+                lastFUTime = PSPS.time;
             }
             if (!StatMaster.isSimulating) Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
             float 炮力 = GetComponentInParent<BlockBehaviour>().Sliders[0].Value;
-            ParticleSystem PS = this.GetComponent<ParticleSystem>();
-            PS.maxParticles = (int)Mathf.Log(炮力 * 10, 校准参数) * 1000;
-            PS.startLifetime = Mathf.Log(炮力 * 10, 30) * 1.27f;
-            ParticleSystem.EmissionModule EM = PS.emission;
+            PSPS.maxParticles = (int)Mathf.Log(炮力 * 10, 校准参数) * 1000;
+            PSPS.startLifetime = Mathf.Log(炮力 * 10, 30) * 1.27f;
+            ParticleSystem.EmissionModule EM = PSPS.emission;
             EM.rate = (int)(Math.Log(炮力 * 10, 校准参数) * 141);
-            PS.startSpeed = Mathf.Log(炮力 * 10, 校准参数) * 1.27f;
+            PSPS.startSpeed = Mathf.Log(炮力 * 10, 校准参数) * 1.27f;
 
-            if (this.GetComponent<ParticleSystem>().IsAlive())
+            if (PSPS.IsAlive())
             {
-                if (this.GetComponent<ParticleSystem>().time == lastFUTime)
+                if (PSPS.time == lastFUTime)
                 {
                     ThisLight.enabled = false;
                 }
@@ -1697,7 +1702,7 @@ namespace SkyAndCloud
                 {
                     ThisLight.enabled = true;
                 }
-                lastFUTime = this.GetComponent<ParticleSystem>().time;
+                lastFUTime = PSPS.time;
             }
             /*else {
                 Destroy(this.GetComponent<ShakeLightingWholalalalalalallalala>());
